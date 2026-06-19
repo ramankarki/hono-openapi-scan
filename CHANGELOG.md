@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/ramankarki/hono-openapi-scan/compare/hono-openapi-scan-v1.0.0...hono-openapi-scan-v1.1.0) (2026-06-19)
+
+
+### Features
+
+* initial release — OpenAPI 3.1 scanner for Hono ([928d426](https://github.com/ramankarki/hono-openapi-scan/commit/928d4260dd4aa244593aeb6cefddee81a6391795))
+
 ## 1.0.0 (2026-06-19)
 
 ### Features
