@@ -43,12 +43,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/raman/hono-openapi-scan.git"
+    "url": "git+https://github.com/ramankarki/hono-openapi-scan.git"
   },
   "bugs": {
-    "url": "https://github.com/raman/hono-openapi-scan/issues"
+    "url": "https://github.com/ramankarki/hono-openapi-scan/issues"
   },
-  "homepage": "https://github.com/raman/hono-openapi-scan#readme",
+  "homepage": "https://github.com/ramankarki/hono-openapi-scan#readme",
   "scripts": {
     "build": "bun build src/cli.ts --outdir dist --target bun --entry-naming [name].js && bun build src/index.ts --outdir dist --target node --external ts-morph --external zod --external zod-to-json-schema --external commander --external openapi-types --entry-naming [name].js && tsc -p tsconfig.build.json",
     "dev": "bun run src/cli.ts",
