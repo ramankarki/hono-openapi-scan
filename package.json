@@ -1,0 +1,78 @@
+{
+  "name": "hono-openapi-scan",
+  "version": "0.1.0",
+  "description": "Zero-config OpenAPI 3.1 spec generator for Hono. Scans your codebase — no wrappers, no runtime cost.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Raman Karki",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "hono-openapi-scan": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "keywords": [
+    "hono",
+    "openapi",
+    "openapi-spec",
+    "api-docs",
+    "static-analysis",
+    "code-scanner",
+    "zod",
+    "drizzle",
+    "better-auth",
+    "typescript",
+    "cli",
+    "api"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raman/hono-openapi-scan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/raman/hono-openapi-scan/issues"
+  },
+  "homepage": "https://github.com/raman/hono-openapi-scan#readme",
+  "scripts": {
+    "build": "bun build src/cli.ts --outdir dist --target bun --entry-naming [name].js && bun build src/index.ts --outdir dist --target node --external ts-morph --external zod --external zod-to-json-schema --external commander --external openapi-types --entry-naming [name].js && tsc -p tsconfig.build.json",
+    "dev": "bun run src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "format": "prettier --write .",
+    "prepublishOnly": "bun run build && bun test && bun run typecheck",
+    "prepare": "bun .husky/install.mjs",
+    "publish:dry": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "openapi-types": "^12.1.3",
+    "ts-morph": "^28.0.0",
+    "zod": "^4.4.3",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@types/bun": "latest",
+    "husky": "^9.1.7"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

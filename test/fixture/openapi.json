@@ -1,0 +1,2444 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "My API",
+    "version": "1.0.0",
+    "description": "Production-grade REST API built with Hono, Zod, Drizzle ORM, and Better Auth. Features user management, blog posts, authentication with email/password, role-based access control, and cursor pagination."
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check.",
+        "description": "Returns the current server status, current timestamp, and process uptime. Used by load balancers and monitoring tools to verify the service is operational. No authentication required.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/posts/{id}": {
+      "delete": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Delete a post.",
+        "description": "Permanently removes a blog post and all associated metadata (view counts, comments, etc.). Only the author or an admin can delete. This action cannot be undone.",
+        "operationId": "deletePostsId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Post unique identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Post unique identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Update an existing post.",
+        "description": "Partially updates a post. Only the author or an admin can modify a post. Updating status to \"published\" sets the publication date if it was not previously published.",
+        "operationId": "patchPostsId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Post unique identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Post unique identifier"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Post title",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Post body (markdown)",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "excerpt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 500,
+                    "description": "Short description",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "published",
+                      "archived"
+                    ],
+                    "description": "Publication status",
+                    "example": "draft",
+                    "writeOnly": true
+                  },
+                  "publishedAt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time",
+                    "description": "Publication date",
+                    "example": "2026-01-15T10:30:00Z",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Get a single post by ID.",
+        "description": "Returns the full post content (markdown body), metadata, author information, and view count. Increments the view counter on access.",
+        "operationId": "getPostsId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Post unique identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Post unique identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/posts": {
+      "post": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Create a new post.",
+        "description": "Creates a blog post with the authenticated user as the author. Supports draft and published statuses. Published posts get an automatic publication timestamp. Slugs must be unique across all posts.",
+        "operationId": "createPosts",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "Post title",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "slug": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200,
+                    "description": "URL-friendly slug",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "content": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Post body (markdown)",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "excerpt": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "description": "Short description",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "published",
+                      "archived"
+                    ],
+                    "default": "draft",
+                    "description": "Publication status",
+                    "example": "draft",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "title",
+                  "slug",
+                  "content"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Posts"
+        ],
+        "summary": "List all posts.",
+        "description": "Returns a paginated list of blog posts with optional filtering by publication status, author, and full-text search across title and content. Posts are ordered by creation date (newest first).",
+        "operationId": "getPosts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "archived"
+              ],
+              "description": "Filter by status",
+              "example": "draft"
+            },
+            "description": "Filter by status"
+          },
+          {
+            "name": "authorId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter by author",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Filter by author"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search title/content",
+              "example": "string"
+            },
+            "description": "Search title/content"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Items per page",
+              "example": 20
+            },
+            "description": "Items per page"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor",
+              "example": "string"
+            },
+            "description": "Pagination cursor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "List all users.",
+        "description": "Returns a paginated list of users with optional role filtering, full-text search by name or email, and cursor-based pagination. Requires admin privileges in production.",
+        "operationId": "getUsers",
+        "parameters": [
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "admin",
+                "user",
+                "moderator"
+              ],
+              "description": "Filter by role",
+              "example": "admin"
+            },
+            "description": "Filter by role"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Search by name or email",
+              "example": "string"
+            },
+            "description": "Search by name or email"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Items per page",
+              "example": 20
+            },
+            "description": "Items per page"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Pagination cursor",
+              "example": "string"
+            },
+            "description": "Pagination cursor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a new user.",
+        "description": "Registers a new user account with name, email, password, and optional role assignment. The password is hashed before storage. Returns the created user profile (without password).",
+        "operationId": "createUsers",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Display name",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address",
+                    "example": "user@example.com",
+                    "writeOnly": true
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 128,
+                    "description": "Account password",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "user",
+                      "moderator"
+                    ],
+                    "default": "user",
+                    "description": "User role",
+                    "example": "user",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get a single user by ID.",
+        "description": "Returns the full user profile including email, role, avatar, and timestamps. Does not return sensitive fields like password hash.",
+        "operationId": "getUsersId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User unique identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "User unique identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update an existing user.",
+        "description": "Partially updates a user profile. Only the fields provided in the request body are changed. Admin or the user themselves can update.",
+        "operationId": "patchUsersId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User unique identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "User unique identifier"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Display name",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "image": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uri",
+                    "description": "Avatar URL",
+                    "example": "https://example.com",
+                    "writeOnly": true
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "user",
+                      "moderator"
+                    ],
+                    "description": "User role",
+                    "example": "admin",
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Delete a user.",
+        "description": "Permanently removes a user account and all associated data. This action cannot be undone. Requires admin privileges.",
+        "operationId": "deleteUsersId",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "User unique identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "User unique identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get current user profile.",
+        "description": "Returns the authenticated user's own profile using the session token. Does not require a user ID — derives identity from the auth middleware.",
+        "operationId": "getUsersMe",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/auth/sign-out": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign out current session.",
+        "description": "Invalidates the current session token. After signing out, the token can no longer be used to access protected resources. Subsequent requests must re-authenticate.",
+        "operationId": "createAuthSign-out",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/auth/sign-in": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign in with email and password.",
+        "description": "Authenticates a user with their email and password credentials. Returns a session token valid for 7 days and the user profile. The session token should be sent as a Bearer token in the Authorization header.",
+        "operationId": "createAuthSign-in",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address",
+                    "example": "user@example.com",
+                    "writeOnly": true
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Password",
+                    "example": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sign-up": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign up a new user.",
+        "description": "Creates a new account with email and password. Sends a verification email if email verification is enabled. Returns a session token and the user profile on success.",
+        "operationId": "createAuthSign-up",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100,
+                    "description": "Display name",
+                    "example": "string",
+                    "writeOnly": true
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address",
+                    "example": "user@example.com",
+                    "writeOnly": true
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 128,
+                    "description": "Password",
+                    "example": "string",
+                    "writeOnly": true
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "Response object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    },
+    {
+      "url": "https://api.example.com",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication — sign up, sign in, sign out"
+    },
+    {
+      "name": "Users",
+      "description": "User management — CRUD and profile access"
+    },
+    {
+      "name": "Posts",
+      "description": "Blog posts — draft/publish workflow"
+    },
+    {
+      "name": "Health",
+      "description": "Monitoring and uptime verification"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Better Auth session token. Obtain via POST /auth/sign-in or /auth/sign-up."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [
+              false
+            ],
+            "description": "Always false for error responses",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "authentication_error",
+                  "authorization_error",
+                  "validation_error",
+                  "not_found_error",
+                  "conflict_error",
+                  "internal_server_error"
+                ],
+                "description": "Broad error category"
+              },
+              "code": {
+                "type": "string",
+                "description": "Machine-readable error code (e.g. user_not_found)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              }
+            },
+            "required": [
+              "type",
+              "code",
+              "message"
+            ],
+            "additionalProperties": false,
+            "description": "Error details",
+            "example": "string"
+          }
+        },
+        "required": [
+          "success",
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "ErrorSchema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "const": false,
+            "description": "Always false for error responses",
+            "example": "string"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "authentication_error",
+                  "authorization_error",
+                  "validation_error",
+                  "not_found_error",
+                  "conflict_error",
+                  "internal_server_error"
+                ],
+                "description": "Broad error category"
+              },
+              "code": {
+                "type": "string",
+                "description": "Machine-readable error code (e.g. user_not_found)"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              }
+            },
+            "required": [
+              "type",
+              "code",
+              "message"
+            ],
+            "description": "Error details",
+            "example": "string"
+          }
+        },
+        "required": [
+          "success",
+          "error"
+        ]
+      },
+      "UserSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name",
+            "example": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address",
+            "example": "user@example.com"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "description": "Whether email is verified",
+            "example": true
+          },
+          "image": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "Avatar URL",
+            "example": "https://example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "user",
+              "moderator"
+            ],
+            "description": "User role",
+            "example": "admin"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2026-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2026-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "emailVerified",
+          "image",
+          "role",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreateUserInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name",
+            "example": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "description": "Account password",
+            "example": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "user",
+              "moderator"
+            ],
+            "default": "user",
+            "description": "User role",
+            "example": "user"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "UpdateUserInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name",
+            "example": "string"
+          },
+          "image": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "Avatar URL",
+            "example": "https://example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "user",
+              "moderator"
+            ],
+            "description": "User role",
+            "example": "admin"
+          }
+        }
+      },
+      "UserListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserSchema"
+            },
+            "description": "List of users",
+            "example": "string"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total count",
+            "example": 42
+          },
+          "cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Pagination cursor",
+            "example": "string"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "cursor"
+        ]
+      },
+      "SignUpInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name",
+            "example": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "description": "Password",
+            "example": "string"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "SignInInput": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Password",
+            "example": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Session token",
+            "example": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserSchema",
+            "description": "Authenticated user"
+          }
+        },
+        "required": [
+          "token",
+          "user"
+        ]
+      },
+      "PostSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Post title",
+            "example": "string"
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "URL-friendly slug",
+            "example": "string"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Post body (markdown)",
+            "example": "string"
+          },
+          "excerpt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "description": "Short description",
+            "example": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "description": "Publication status",
+            "example": "draft"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Author user ID",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "viewCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "View count",
+            "example": 42
+          },
+          "publishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Publication date",
+            "example": "2026-01-15T10:30:00Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp",
+            "example": "2026-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp",
+            "example": "2026-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "content",
+          "excerpt",
+          "status",
+          "authorId",
+          "viewCount",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CreatePostInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Post title",
+            "example": "string"
+          },
+          "slug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "URL-friendly slug",
+            "example": "string"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Post body (markdown)",
+            "example": "string"
+          },
+          "excerpt": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Short description",
+            "example": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "default": "draft",
+            "description": "Publication status",
+            "example": "draft"
+          }
+        },
+        "required": [
+          "title",
+          "slug",
+          "content"
+        ]
+      },
+      "UpdatePostInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Post title",
+            "example": "string"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Post body (markdown)",
+            "example": "string"
+          },
+          "excerpt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 500,
+            "description": "Short description",
+            "example": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "description": "Publication status",
+            "example": "draft"
+          },
+          "publishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Publication date",
+            "example": "2026-01-15T10:30:00Z"
+          }
+        }
+      },
+      "PostListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostSchema"
+            },
+            "description": "List of posts",
+            "example": "string"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total count",
+            "example": 42
+          },
+          "cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Pagination cursor",
+            "example": "string"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "cursor"
+        ]
+      },
+      "UserQuerySchema": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "user",
+              "moderator"
+            ],
+            "description": "Filter by role",
+            "example": "admin"
+          },
+          "search": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Search by name or email",
+            "example": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "description": "Items per page",
+            "example": 20
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor",
+            "example": "string"
+          }
+        }
+      },
+      "PostQuerySchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "description": "Filter by status",
+            "example": "draft"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Filter by author",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "search": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Search title/content",
+            "example": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "description": "Items per page",
+            "example": 20
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor",
+            "example": "string"
+          }
+        }
+      },
+      "UserParamsSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "PostParamsSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Post unique identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "Users": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier for the user",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name shown in the UI",
+            "example": "string"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address used for login and notifications",
+            "example": "string"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "description": "Email Verified",
+            "example": true
+          },
+          "image": {
+            "type": "string",
+            "description": "URL to the user's avatar image",
+            "example": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role",
+            "example": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Created At",
+            "example": "2026-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Updated At",
+            "example": "2026-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "name",
+          "email"
+        ]
+      },
+      "Posts": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier for the post",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "title": {
+            "type": "string",
+            "description": "Post title displayed in listings and detail pages",
+            "example": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL-friendly unique slug for SEO",
+            "example": "string"
+          },
+          "content": {
+            "type": "string",
+            "description": "Full post body in markdown format",
+            "example": "string"
+          },
+          "excerpt": {
+            "type": "string",
+            "description": "Excerpt",
+            "example": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "Status",
+            "example": "string"
+          },
+          "authorId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Author Id",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "viewCount": {
+            "type": "integer",
+            "description": "View Count",
+            "example": 42
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Published At",
+            "example": "2026-01-15T10:30:00Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Created At",
+            "example": "2026-01-15T10:30:00Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Updated At",
+            "example": "2026-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "title",
+          "slug",
+          "content",
+          "authorId"
+        ]
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Id",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User Id",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "providerId": {
+            "type": "string",
+            "description": "Provider Id",
+            "example": "string"
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Account Id",
+            "example": "string"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh Token",
+            "example": "string"
+          },
+          "accessToken": {
+            "type": "string",
+            "description": "Access Token",
+            "example": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "providerId",
+          "accountId"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Id",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "User Id",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "token": {
+            "type": "string",
+            "description": "Token",
+            "example": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Expires At",
+            "example": "2026-01-15T10:30:00Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Created At",
+            "example": "2026-01-15T10:30:00Z"
+          }
+        },
+        "required": [
+          "userId",
+          "token",
+          "expiresAt"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}
