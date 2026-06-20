@@ -19,34 +19,40 @@ src/
 ├── cli.ts          # Commander CLI entry: `hono-openapi-scan [entry] [--config]`, `init`
 ├── index.ts        # Public API re-exports (scan, loadConfig, defineConfig)
 ├── config.ts       # Config loading + defaults (package.json, README.md fallbacks)
-├── scanner.ts      # Orchestrates the pipeline: project → registry → routes → assemble → write
+├── scanner.ts      # Orchestrates pipeline: project → registry → routes → assemble → write
 ├── project.ts      # ts-morph Project setup + import tree resolution
 ├── routes.ts       # Walk AST to find Hono apps, routes, middleware, responses
-├── assemble.ts     # Build OpenAPI 3.1 spec object from RouteInfo[]
+├── type-walker.ts  # Convert ts-morph Type → JSON Schema for response bodies
+├── assemble.ts     # Build OpenAPI 3.1 spec from RouteInfo[]. normalizeResponseRefs.
 ├── zod-schema.ts   # Walk Zod AST → JSON Schema (z.object, z.string, chained methods)
-├── drizzle.ts      # Detect pgTable/mysqlTable/sqliteTable → JSON Schema
-├── jsdoc.ts        # Parse JSDoc comments → JSDocInfo (@tags, @public, @returns, etc.)
+├── drizzle.ts      # Detect pgTable/mysqlTable/sqliteTable → JSON Schema (text-based)
+├── jsdoc.ts        # Parse JSDoc → JSDocInfo (@tags, @public, @returns, @security, etc.)
 └── types.ts        # All TypeScript interfaces (RouteInfo, ScanConfig, SchemaRef, etc.)
 ```
 
-### Pipeline (6 passes)
+### Pipeline (8 phases)
 
 1. **Resolve** (`project.ts`): Start at entry file, follow all imports transitively via ts-morph. Only reachable files parsed.
-2. **Find apps** (`routes.ts::buildAppRegistry`): Find all `new Hono()` expressions + auth middleware scopes (`app.use('*', authMiddleware)`).
-3. **Walk routes** (`routes.ts::walkAppRoutes`): For each Hono app, find `.get()/.post()/.put()/.patch()/.delete()/.on()` calls. Extract middleware chain, handler, JSDoc. Follow `.route()` to sub-apps recursively.
-4. **Collect schemas** (`assemble.ts`): Demand-driven — only Zod/Drizzle schemas referenced by endpoints are registered. Transitive `$ref` resolution loop.
-5. **Assemble** (`assemble.ts::assembleSpec`): Build full OpenAPI 3.1 object — paths, parameters, request bodies, responses, error schemas, security, tags, components.
-6. **Write** (`scanner.ts`): JSON.stringify + writeFileSync.
+2. **Find apps** (`routes.ts::buildAppRegistry`): Find all `new Hono()` expressions + auth middleware scopes (`app.use('*', authMiddleware)`). Collect known schema names for $ref resolution.
+3. **Walk routes** (`routes.ts::walkAppRoutes`): For each Hono app, find `.get()/.post()/.put()/.patch()/.delete()/.on()` calls. Extract middleware chain, handler, JSDoc. Follow `.route()` to sub-apps recursively. For each handler, AST-walk body to find `c.json()`/`c.body()`/etc. calls. Resolve data types via `type-walker.ts::getType()`.
+4. **Collect Zod schemas** (`assemble.ts`): Demand-driven — only Zod schemas referenced by endpoints (via zValidator or @returns) are registered.
+5. **Build schemas** (`assemble.ts`): Resolve Zod AST → JSON Schema. Detect Drizzle tables matching response shapes → register with readOnly. Transitive $ref resolution. Auto-generate examples.
+6. **Normalize refs** (`assemble.ts::normalizeResponseRefs`): Replace inline response schemas that match component schemas with $ref. Handles anonymous types from `as` assertions.
+7. **Assemble** (`assemble.ts::assembleSpec`): Build full OpenAPI 3.1 object — paths, parameters, request bodies, responses, error schemas, security, tags, components.
+8. **Write** (`scanner.ts`): JSON.stringify + writeFileSync.
 
 ### Key Design Decisions
 
 - **Demand-driven schemas:** Only schemas actually referenced by routes are in `components/schemas`. Unreferenced exports are ignored.
 - **Zod AST, not `zod-to-json-schema`:** Custom AST walker (`zod-schema.ts`) converts Zod definitions to JSON Schema. Handles chained methods (`.min()`, `.email()`, `.describe()`), cross-schema `$ref`, and type constructors. `zod-to-json-schema` only used for user-provided `config.errorSchema` Zod objects.
-- **Drizzle via text patterns:** Column type detection uses callee text matching (`calleeText.includes('uuid')`), not ts-morph `getType()`. Simple and works for all Drizzle dialects.
+- **Response type resolution:** `type-walker.ts` converts ts-morph `getType()` results to JSON Schema. AST walks handler bodies to find `c.json(data, status)` calls, resolves data types to full schemas with properties, nullability, and nested objects. Also handles `c.body()`, `c.text()`, `c.html()`, `c.redirect()`.
+- **Drizzle via text patterns:** Column type detection uses callee text matching (`calleeText.includes('uuid')`), not ts-morph `getType()`. Simple and works for all Drizzle dialects. Registration is demand-driven via shape matching — tables only appear in components when response schemas match their property set.
+- **Schema ref normalization:** `normalizeResponseRefs` matches inline response schemas against component schemas by property names. Handles anonymous types from `as typeof table.$inferSelect` assertions where ts-morph produces synthetic types without declarations.
 - **No runtime deps for scanning:** ts-morph does all the work. User's code is never executed.
-- **Query parameter expansion:** `zValidator('query', schema)` → individual parameters expanded from schema properties (not a single `$ref`).
+- **Query/header/cookie param expansion:** `zValidator('query/header/cookie', schema)` → individual parameters expanded from schema properties (not a single `$ref`).
+- **Default error schema:** RFC 9457 format — `{ code, message, status, details[] }` with SCREAMING_SNAKE_CASE codes. Overridable via `config.errorSchema`.
 - **Error responses auto-generated:** 400 (has validation), 401 (route is auth), 404 (has path params), 429, 500. Disable with `@error none` or `config.defaultErrorResponses: false`.
-- **Auth detection:** Looks for `app.use('*', middleware)` where middleware body contains patterns like `auth.api.getSession`, `c.set('user'`, `c.set('session'`. Routes can override with `@public`.
+- **Auth detection:** Looks for `app.use('*', middleware)` where middleware body contains patterns like `auth.api.getSession`, `c.set('user'`, `c.set('session'`. Routes can override with `@public` or explicit `@security {scheme1, scheme2}`.
 
 ---
 
@@ -98,7 +104,7 @@ src/
 
 ### Do NOT
 - Add runtime middleware — this is a build-time tool.
-- Use `ts-morph.getType()` for Zod/Drizzle mapping — AST text-based detection is simpler and more reliable for these patterns.
+- Use `ts-morph.getType()` for Zod/Drizzle schema building — AST text-based detection is simpler and more reliable for these patterns. (Response type resolution DOES use `getType()` — that's for runtime data shapes, not schema definitions.)
 - Add new dependencies without strong justification.
 - Change `dist/` files by hand — build pipeline handles it.
 - Modify test fixture without updating expected output (`test/fixture/openapi.json`).
@@ -107,34 +113,29 @@ src/
 
 ## Test Fixture
 
-`test/fixture/` is a complete mock Hono project:
-- `src/index.ts` — 3 Hono apps (main, auth, health), Better Auth middleware, routes
-- `src/routes/users.ts` — GET/POST routes with zValidator
-- `src/routes/posts.ts` — GET/POST routes
-- `src/routes/auth.ts` — Better Auth handler routes
-- `src/routes/health.ts` — public health endpoint
-- `src/schemas/index.ts` — Zod schemas (UserSchema, CreateUserInput, etc.)
-- `src/db/schema.ts` — Drizzle pgTable definitions
-- `src/lib/auth-middleware.ts` — Better Auth middleware
+`test/fixture/` is a complete mock Hono project exercising all scanner features:
+- `src/index.ts` — Entry: 3 Hono apps mounted via `.route()`, Better Auth middleware, CORS
+- `src/routes/users.ts` — GET/POST/PATCH/DELETE + cookie zValidator + form upload + c.body() + deprecated legacy route + @security per-route
+- `src/routes/posts.ts` — GET/POST/PATCH/DELETE with zValidator, JSDoc on chained handlers
+- `src/routes/auth.ts` — Better Auth handler routes (@hide)
+- `src/routes/health.ts` — Public health + system info with header zValidator
+- `src/schemas/index.ts` — 23 Zod schema exports (User, Post, Auth, Query, Params, Cookie, Header, Form)
+- `src/db/schema.ts` — Drizzle pgTable definitions (users, posts) with comments → readOnly detection
+- `src/lib/auth-middleware.ts` — Better Auth middleware (auto-detected)
 - `src/lib/auth.ts` — betterAuth instance
 - `src/lib/db.ts` — Drizzle instance
-- `src/lib/api-error.ts` — Custom error class
-- `src/lib/error-codes.ts` — Error code constants
-- `hono-openapi-scan.config.ts` — Config for the fixture
-- `openapi.json` — Expected output (golden file)
+- `hono-openapi-scan.config.ts` — Config with custom ErrorSchema, servers, security
+- `openapi.json` — Golden file: 22 operations, 22 component schemas, 86 $ref refs
 
-Running tests: `bun test` (from project root). 42 tests total.
+Running tests: `bun test` (from project root). 43 tests total.
 
 ---
 
-## Docs Not In README
+## Docs
 
-The following docs exist but are **not linked from README.md**:
-
-- `docs/CONVENTIONS.md` — Scanner detection patterns (Zod, Drizzle, Better Auth, JSDoc conventions). Internal reference for what the scanner looks for.
-- `docs/SPEC.md` — Full specification v1. Scopes, boundaries, Zod→JSON Schema mapping table, error response rules, operationId generation, edge cases.
-
-README links: `docs/HOW_IT_WORKS.md` (also links to `README.md#zod--json-schema`).
+- `docs/CONVENTIONS.md` — Scanner detection patterns (Zod, Drizzle, Better Auth, JSDoc). Linked from README.
+- `docs/SPEC.md` — Full specification v1. Scopes, boundaries, Zod→JSON Schema mapping, error rules, operationId generation.
+- `docs/HOW_IT_WORKS.md` — Beginner-friendly walkthrough of the scan pipeline. Linked from README.
 
 ---
 
