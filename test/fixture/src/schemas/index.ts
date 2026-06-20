@@ -131,3 +131,19 @@ export const UserParamsSchema = z.object({
 export const PostParamsSchema = z.object({
   id: z.string().uuid().describe('Post unique identifier'),
 })
+
+// ── Cookie / Header / Form schemas ──
+
+export const SessionCookieSchema = z.object({
+  session: z.string().describe('Better Auth session token'),
+})
+
+export const ApiVersionHeaderSchema = z.object({
+  'x-api-version': z.string().optional().describe('API version to use'),
+  'x-client-id': z.string().describe('Client application identifier'),
+})
+
+export const FileUploadSchema = z.object({
+  file: z.instanceof(File).describe('File to upload'),
+  caption: z.string().optional().describe('Optional caption'),
+})

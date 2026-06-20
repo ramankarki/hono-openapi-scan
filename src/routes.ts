@@ -1,6 +1,7 @@
 import type { SourceFile } from 'ts-morph'
-import type { RouteInfo, MiddlewareInfo, HandlerInfo, ResponseInfo, ZodSchemaInfo, JSDocInfo } from './types'
+import type { RouteInfo, MiddlewareInfo, HandlerInfo, ResponseInfo, ZodSchemaInfo, JSDocInfo, SchemaRef } from './types'
 import { parseJSDocFromNode } from './jsdoc'
+import { resolveExpressionType } from './type-walker'
 
 type AnyNode = any
 
@@ -99,7 +100,8 @@ export function walkAppRoutes(
   sourceFile: SourceFile,
   appName: string,
   registry: AppRegistry,
-  pathPrefix = ''
+  pathPrefix = '',
+  knownSchemas: Set<string> = new Set(),
 ): RouteInfo[] {
   const routes: RouteInfo[] = []
   const visitedSubApps = new Set<string>()
@@ -178,7 +180,7 @@ export function walkAppRoutes(
         const middlewareAndHandler = args.slice(2)
 
         for (const m of methods) {
-          const route = extractRoute(sourceFile, m, pathPrefix + (path || ''), middlewareAndHandler, callJSDoc)
+          const route = extractRoute(sourceFile, m, pathPrefix + (path || ''), middlewareAndHandler, callJSDoc, knownSchemas)
           if (route) routes.push(route)
         }
       }
@@ -189,7 +191,7 @@ export function walkAppRoutes(
       const path = extractStringLiteral(args[0])
       const middlewareAndHandler = args.slice(1)
 
-      const route = extractRoute(sourceFile, method, pathPrefix + (path || ''), middlewareAndHandler, callJSDoc)
+      const route = extractRoute(sourceFile, method, pathPrefix + (path || ''), middlewareAndHandler, callJSDoc, knownSchemas)
       if (route) routes.push(route)
     }
   })
@@ -244,6 +246,7 @@ function extractRoute(
   fullPath: string,
   args: AnyNode[],
   callJSDoc: JSDocInfo | null,
+  knownSchemas: Set<string>,
 ): RouteInfo | null {
   if (!fullPath) return null
 
@@ -268,7 +271,7 @@ function extractRoute(
     const kind = arg.getKindName()
 
     if (kind === 'ArrowFunction' || kind === 'FunctionExpression' || kind === 'FunctionDeclaration') {
-      handler = extractHandlerInfo(arg)
+      handler = extractHandlerInfo(arg, knownSchemas)
       const doc = parseJSDocFromNode(arg)
       if (doc) handlerJSDoc = doc
     } else if (kind === 'Identifier') {
@@ -283,7 +286,7 @@ function extractRoute(
           if (decl) {
             const doc = parseJSDocFromNode(decl)
             if (doc) handlerJSDoc = doc
-            const responses = extractResponsesFromFunction(decl)
+            const responses = extractResponsesFromFunction(decl, knownSchemas)
             if (responses.length > 0) handler.responses = responses
           }
         }
@@ -305,10 +308,12 @@ function extractRoute(
   if (handler && handler.responses.length === 0 && args.length > 0) {
     const lastArg = args[args.length - 1]
     if (lastArg) {
-      const responses = extractResponsesFromFunction(lastArg)
+      const responses = extractResponsesFromFunction(lastArg, knownSchemas)
       handler.responses = responses
     }
   }
+
+
 
   // Convert path to OpenAPI format: /:id → /{id}
   const openApiPath = extractPathParams(fullPath)
@@ -326,6 +331,12 @@ function extractRoute(
     jsdoc.operationId = generateOperationId(method, openApiPath)
   }
 
+  // Build explicit per-route security from @security JSDoc annotations
+  let routeSecurity: Array<Record<string, string[]>> | undefined
+  if (jsdoc.security && jsdoc.security.length > 0) {
+    routeSecurity = jsdoc.security.map((s: string) => ({ [s]: [] }))
+  }
+
   return {
     method,
     path: openApiPath,
@@ -333,6 +344,7 @@ function extractRoute(
     middleware,
     handler,
     jsdoc,
+    security: routeSecurity,
     tags: jsdoc.tags,
     operationId: jsdoc.operationId,
     summary: jsdoc.summary || '',
@@ -434,7 +446,7 @@ function extractZodSchemaFromArg(node: AnyNode | undefined): ZodSchemaInfo | und
   return undefined
 }
 
-function extractHandlerInfo(node: AnyNode): HandlerInfo {
+function extractHandlerInfo(node: AnyNode, _knownSchemas: Set<string>): HandlerInfo {
   const sourceFile = node.getSourceFile().getFilePath()
   let returnType: string | undefined
 
@@ -451,42 +463,40 @@ function extractHandlerInfo(node: AnyNode): HandlerInfo {
   }
 }
 
-function extractResponsesFromFunction(node: AnyNode): ResponseInfo[] {
+/**
+ * Walk the AST of a function body to find c.json(), c.text(), c.html(), c.body(), and c.redirect() calls.
+ * For each call, extract status code and resolve the data type via ts-morph.
+ */
+function extractResponsesFromFunction(node: AnyNode, knownSchemas: Set<string>): ResponseInfo[] {
   const responses: ResponseInfo[] = []
-  const text: string = node.getText?.() || ''
+  const seenStatuses = new Set<number>()
 
-  const jsonPattern = /c\.json\(\s*([\s\S]+?)\s*,\s*(\d+)\s*\)/g
-  let match
+  // Walk all descendants looking for c.json / c.text / c.html / c.body / c.redirect calls
+  try {
+    node.forEachDescendant((descendant: AnyNode) => {
+      if (descendant.getKindName() !== 'CallExpression') return
+      extractResponseCall(descendant, responses, seenStatuses, knownSchemas)
+    })
+  } catch {
+    // Fallback: try regex on text for unresolvable nodes
+    return fallbackExtractResponses(node)
+  }
 
-  while ((match = jsonPattern.exec(text)) !== null) {
-    const status = parseInt(match[2]!)
-    const dataExpr = match[1]
-
-    if (!isNaN(status)) {
-      const resp: ResponseInfo = {
-        status,
-        description: getStatusDescription(status),
-        contentType: 'application/json',
-      }
-
-      if (dataExpr) {
-        resp.schema = inferSchemaFromExpression(dataExpr)
-      }
-
-      if (!responses.find(r => r.status === status)) {
-        responses.push(resp)
-      }
+  // Check for text/plain and text/html at function level
+  if (responses.length === 0) {
+    const text = node.getText?.() || ''
+    if (text.includes('c.text(') && !responses.some(r => r.contentType === 'text/plain')) {
+      responses.push({ status: 200, description: 'OK', contentType: 'text/plain' })
     }
-  }
-
-  if (text.includes('c.text(')) {
-    responses.push({ status: 200, description: 'OK', contentType: 'text/plain' })
-  }
-  if (text.includes('c.html(')) {
-    responses.push({ status: 200, description: 'OK', contentType: 'text/html' })
-  }
-  if (text.includes('c.redirect(')) {
-    responses.push({ status: 302, description: 'Found', contentType: 'text/plain' })
+    if (text.includes('c.html(') && !responses.some(r => r.contentType === 'text/html')) {
+      responses.push({ status: 200, description: 'OK', contentType: 'text/html' })
+    }
+    if (text.includes('c.body(') && !responses.some(r => r.contentType === 'application/octet-stream')) {
+      responses.push({ status: 200, description: 'OK', contentType: 'application/octet-stream' })
+    }
+    if (text.includes('c.redirect(') && !responses.some(r => r.status === 302)) {
+      responses.push({ status: 302, description: 'Found', contentType: 'text/plain' })
+    }
   }
 
   if (responses.length === 0) {
@@ -496,16 +506,130 @@ function extractResponsesFromFunction(node: AnyNode): ResponseInfo[] {
   return responses
 }
 
-function inferSchemaFromExpression(expr: string): any {
-  if (expr.includes('{') && expr.includes('}')) {
-    return { type: 'object', description: 'Response object' }
+function extractResponseCall(
+  callNode: AnyNode,
+  responses: ResponseInfo[],
+  seenStatuses: Set<number>,
+  knownSchemas: Set<string>,
+): void {
+  const callee = callNode.getExpression?.()
+  if (!callee || callee.getKindName?.() !== 'PropertyAccessExpression') return
+
+  const obj = callee.getExpression?.()
+  const method = callee.getName?.()
+  if (obj?.getText?.() !== 'c') return
+
+  const args: AnyNode[] = callNode.getArguments?.() || []
+  if (args.length < 1) return
+
+  if (method === 'json') {
+    const dataArg = args[0]
+    const statusArg = args[1]
+
+    let status = 200
+    if (statusArg) {
+      const statusText = statusArg.getText?.() || ''
+      const parsed = parseInt(statusText)
+      if (!isNaN(parsed)) status = parsed
+    }
+
+    if (!seenStatuses.has(status)) {
+      seenStatuses.add(status)
+
+      let schema: SchemaRef | undefined
+      try {
+        if (dataArg) {
+          // Trace variable references back to their object literal for type walking.
+          // `as` assertions produce synthetic types with unresolvable property nodes.
+          let typeArg = dataArg
+          if (dataArg.getKindName?.() === 'Identifier') {
+            const sym = dataArg.getSymbol?.()
+            const decls = sym?.getDeclarations?.()
+            if (decls?.[0]) {
+              const init = decls[0].getInitializer?.()
+              if (init) {
+                // Unwrap AsExpression: use the expression (object literal) before 'as'
+                if (init.getKindName?.() === 'AsExpression') {
+                  typeArg = init.getExpression?.() || init
+                } else {
+                  typeArg = init
+                }
+              }
+            }
+          } else if (dataArg.getKindName?.() === 'AsExpression') {
+            typeArg = dataArg.getExpression?.() || dataArg
+          }
+          const resolved = resolveExpressionType(typeArg, knownSchemas)
+          if (resolved && (resolved.type || resolved.$ref || resolved.properties)) {
+            schema = resolved
+          }
+        }
+      } catch { /* type resolution failed, leave schema undefined */ }
+
+      responses.push({
+        status,
+        description: getStatusDescription(status),
+        contentType: 'application/json',
+        schema,
+      })
+    }
+  } else if (method === 'text') {
+    if (!responses.some(r => r.contentType === 'text/plain')) {
+      responses.push({ status: 200, description: 'OK', contentType: 'text/plain' })
+    }
+  } else if (method === 'html') {
+    if (!responses.some(r => r.contentType === 'text/html')) {
+      responses.push({ status: 200, description: 'OK', contentType: 'text/html' })
+    }
+  } else if (method === 'body') {
+    if (!responses.some(r => r.contentType === 'application/octet-stream')) {
+      responses.push({ status: 200, description: 'OK', contentType: 'application/octet-stream' })
+    }
+  } else if (method === 'redirect') {
+    const statusArg = args[1]
+    let status = 302
+    if (statusArg) {
+      const statusText = statusArg.getText?.() || ''
+      const parsed = parseInt(statusText)
+      if (!isNaN(parsed)) status = parsed
+    }
+    if (!seenStatuses.has(status)) {
+      seenStatuses.add(status)
+      responses.push({ status, description: getStatusDescription(status), contentType: 'text/plain' })
+    }
+  }
+}
+
+/** Fallback: regex-based extraction for when AST walking fails */
+function fallbackExtractResponses(node: AnyNode): ResponseInfo[] {
+  const responses: ResponseInfo[] = []
+  const text: string = node.getText?.() || ''
+
+  const jsonPattern = /c\.json\(\s*([\s\S]+?)\s*,\s*(\d+)\s*\)/g
+  let match
+
+  while ((match = jsonPattern.exec(text)) !== null) {
+    const status = parseInt(match[2]!)
+    if (!isNaN(status) && !responses.find(r => r.status === status)) {
+      responses.push({
+        status,
+        description: getStatusDescription(status),
+        contentType: 'application/json',
+        schema: { type: 'object', description: 'Response object' },
+      })
+    }
   }
 
-  if (/^[a-zA-Z_]\w*$/.test(expr.trim())) {
-    return { type: 'object' }
+  if (text.includes('c.text(')) responses.push({ status: 200, description: 'OK', contentType: 'text/plain' })
+  if (text.includes('c.html(')) responses.push({ status: 200, description: 'OK', contentType: 'text/html' })
+  if (text.includes('c.body(')) responses.push({ status: 200, description: 'OK', contentType: 'application/octet-stream' })
+  if (text.includes('c.redirect(')) responses.push({ status: 302, description: 'Found', contentType: 'text/plain' })
+
+  if (responses.length === 0) {
+    responses.push({ status: 200, description: 'OK', contentType: 'application/json' })
   }
 
-  return undefined
+  return responses
 }
 
 function generateSummary(method: string, path: string): string {
@@ -558,7 +682,9 @@ function generateOperationId(method: string, path: string): string {
   else if (method === 'PATCH') prefix = 'patch'
   else if (method === 'DELETE') prefix = 'delete'
 
-  const partsPascal = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1))
+  const partsPascal = parts.map(p =>
+    p.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')
+  )
   return prefix + partsPascal.join('')
 }
 

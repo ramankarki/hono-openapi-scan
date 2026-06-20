@@ -18,6 +18,7 @@ bunx hono-openapi-scan        # generate openapi.json
 - [How It Works](#how-it-works)
 - [Why hono-openapi-scan?](#why-hono-openapi-scan)
 - [What Gets Detected](#what-gets-detected)
+- [Detection Patterns](docs/CONVENTIONS.md)
 - [Writing Good Code](#writing-good-code)
 - [Config Reference](#config-reference)
 - [Library API](#library-api)
@@ -148,12 +149,6 @@ For a deep dive, read [How It Works](docs/HOW_IT_WORKS.md).
 | **Error docs**       | ✅ Auto 400/401/404/429/500 per route | ❌ Manual | ❌ Manual |
 | **Beginner friendly**| ✅ One command, no code changes | ❌ Must learn `createRoute` API | ❌ Must learn wrapper API |
 
-**When to use each:**
-
-- **hono-openapi-scan** — You have an existing Hono app. You want OpenAPI docs without touching your routes. You use Zod, Drizzle, Better Auth. One command.
-- **@hono/zod-openapi** — You're starting fresh. You want OpenAPI integrated from day one. You're OK wrapping every route with `createRoute()`. You need runtime validation tied to the spec.
-- **hono-openapi** — Similar to `@hono/zod-openapi` with a different API surface. Community maintained.
-
 ## What Gets Detected
 
 | Pattern | Detected As | Example |
@@ -172,6 +167,8 @@ For a deep dive, read [How It Works](docs/HOW_IT_WORKS.md).
 | JSDoc `@tags Users` | Tag grouping in docs | OpenAPI tags |
 | JSDoc `@returns {Schema}` | Response `\$ref` | Typed responses |
 | JSDoc `@error 404` | Custom error response | Per-route error docs |
+
+> See **[Detection Patterns](docs/CONVENTIONS.md)** for full reference — Zod, Drizzle, Better Auth, JSDoc conventions, sub-router patterns, and what's out of scope.
 
 ## Writing Good Code
 
@@ -384,8 +381,6 @@ export const CreateUserInput = z.object({
   "required": ["name", "email"]
 }
 ```
-
-**Supported Zod methods:** `.string()`, `.number()`, `.boolean()`, `.date()`, `.enum()`, `.array()`, `.object()`, `.nullable()`, `.optional()`, `.nullish()`, `.default()`, `.describe()`, `.min()`, `.max()`, `.email()`, `.url()`, `.uuid()`, `.regex()`, `.int()`, `.coerce.*()`, `.readonly()`, `.deprecated()`
 
 ### Drizzle → JSON Schema
 

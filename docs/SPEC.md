@@ -55,11 +55,11 @@ c.json(error, 500)
 Multiple `return c.json(...)` in handler → multiple response statuses detected.
 
 ### 2.4 Type resolution for response bodies
-Priority order:
-1. Handler return type annotation: `async (c): Promise<User> =>`
-2. JSDoc `@returns {User}` on handler
-3. Trace `c.json()` argument type through ts-morph (variable → declaration → type)
-4. Inline object literal shape detection
+
+- **Primary:** AST walks handler body to find `c.json(data, status)` calls, then `getType()` on the data argument → full JSON Schema with properties, types, and nullability.
+- **JSDoc `@returns {SchemaName}`:** produces `$ref` when no c.json() schema is resolved.
+- **Fallback:** status code only (e.g., when data comes from `c.get()` with unresolved context types).
+- Handler return type annotations are NOT used — Hono returns `Promise<JSONRespondReturn<{body,headers,status}>>`, not the data type.
 
 ### 2.5 Zod schemas (component registry)
 **Demand-driven.** Only Zod schemas actually referenced by endpoints (via zValidator, return type, or JSDoc `@returns`) are registered in `components.schemas`. Unreferenced exports in reachable files are ignored. Schema is registered under its export name.
@@ -102,7 +102,7 @@ export const users = pgTable('users', {
   ...
 })
 ```
-**Demand-driven + type-inferred.** When an endpoint response references a Drizzle table type, ts-morph `getType()` on the variable or table declaration yields the fully-resolved TypeScript type. Walk type properties → JSON Schema. No AST-based column introspection needed. Registered as `components.schemas.{TableName}`. Unreferenced tables ignored.
+**Demand-driven + text-based column detection.** Only tables referenced by endpoint response types are registered. Column types are detected by matching the callee text of Drizzle column builders (`uuid()`, `text()`, `integer()`, etc.) with nullability, defaults, and primary keys inferred from chained methods. Registered as `components.schemas.{TableName}`. Unreferenced tables ignored.
 
 ---
 
@@ -470,7 +470,7 @@ Write openapi.json
 | Trace import references | `node.getSymbol()` → `.getDeclarations()` |
 | Resolve type of variable | `node.getType()` → `.getProperties()` → walk type tree |
 | Convert TypeScript type → JSON Schema | Walk type properties: string→string, number→number, Date→date-time, etc. |
-| Resolve Drizzle table type | `getType()` on exported pgTable const → yields resolved column types |
+| Resolve Drizzle table type | Text match on column builder callee (`uuid()`, `text()`, etc.) + chained method introspection |
 | Follow `.route()` to sub-app | Resolve import, find sub-app node, recurse |
 
 ---
@@ -602,7 +602,15 @@ Naming rules:
 
 ## 11. Type Resolution Strategy
 
-**Type-inference-first.** ts-morph `getType()` resolves TypeScript types at compile time. Drizzle table and query return types, inline object shapes, and explicit annotations all flow through the same pipeline. AST parsing used only for Zod metadata (`.describe()`, `.min()`, etc.) and Drizzle table names.
+### Response types: ts-morph `getType()` on c.json() data
+
+The scanner walks the handler body AST to find every `c.json(data, status)` call. For each, it calls `getType()` on the data argument and converts the resolved TypeScript type to JSON Schema:
+
+```ts
+return c.json({ data: users, cursor: null }, 200)
+// → getType() resolves to: { data: User[]; cursor: string | null }
+// → JSON Schema: { type: "object", properties: { data: { type: "array", items: ... }, cursor: { type: "string", nullable: true } } }
+```
 
 TypeScript type → JSON Schema mapping:
 
@@ -612,12 +620,17 @@ TypeScript type → JSON Schema mapping:
 | `number` | `{ type: "number" }` |
 | `boolean` | `{ type: "boolean" }` |
 | `Date` | `{ type: "string", format: "date-time" }` |
-| `string \| null` | `{ type: ["string", "null"] }` (3.1) |
+| `string \| null` | `{ type: "string", nullable: true }` |
 | `T[]` / `Array<T>` | `{ type: "array", items: <T> }` |
 | `{ key: T }` | `{ type: "object", properties: { key: <T> } }` |
-| `Record<K, V>` | `{ type: "object", additionalProperties: <V> }` |
 | Enum / literal union | `{ type: "string", enum: [...] }` |
 | `undefined` (optional) | Property removed from `required` |
+
+Handler return type annotations are NOT used — Hono handlers return `Promise<JSONRespondReturn<{body,headers,status}>>`, not the data type.
+
+### Zod schemas: AST walking (not getType())
+
+The scanner walks Zod AST directly to preserve metadata (`.describe()`, `.min()`, `.email()`, etc.) that would be lost via `getType()`. Zod schema detection uses AST text matching and chained method introspection.
 
 ### Request schemas: ALWAYS from zValidator
 
@@ -628,39 +641,15 @@ zValidator('json', CreateUserInput)  // reference → $ref in spec
 ```
 If schema is a reference → check if it's an exported Zod schema → use `$ref`. Otherwise inline.
 
-### Response schemas: multi-strategy
+### Drizzle schemas: text-based column detection
 
-Response types are resolved via ts-morph type inference wherever possible. AST parsing used only for Zod metadata (`.describe()`, `.min()`, etc.).
+Column types detected by matching the callee text of Drizzle column builders (`uuid()`, `text()`, `integer()`, etc.). Nullability, defaults, primary keys, and readOnly inferred from chained methods. Registration is demand-driven — only tables referenced by response types appear in `components.schemas`.
 
-```ts
-// Strategy 1: Explicit return type annotation → ts-morph getType()
-app.get('/users/:id', ..., async (c): Promise<User> => { ... })
-
-// Strategy 2: Trace c.json() argument → ts-morph getType() on variable
-const user = await db.query.users.findFirst(...)
-return c.json(user, 200)
-// getType(user) → Drizzle-inferred type → JSON Schema
-
-// Strategy 3: Inline object literal → getType() on object
-return c.json({ data: users, cursor: null }, 200)
-
-// Strategy 4: JSDoc @returns → resolve named type → getType()
-/** @returns {User} */
-
-// Strategy 5: No schema (fallback)
-return c.json(data, 200)
-// → response has status code but no content schema
-```
-
-### fallback chain
-For every `c.json(X, status)`, use `getType()` on `X`:
-1. Try handler return type annotation → `getType()`
-2. Try `getType()` on the `c.json()` argument directly
-3. Try JSDoc `@returns` → resolve type name → `getType()`
-4. If type has properties → walk them to JSON Schema
-5. If type matches known Drizzle table → register + $ref
-6. If type matches known Zod schema shape → register + $ref
-7. Give up → status only
+### Response schema fallback chain
+For every `c.json(X, status)`:
+1. AST-walk handler body → find `c.json()` calls → `getType()` on data arg → walk to JSON Schema
+2. If no c.json() found: JSDoc `@returns` → produce `$ref`
+3. If neither: status code only, no content schema
 
 ---
 
@@ -673,10 +662,9 @@ For every `c.json(X, status)`, use `getType()` on `X`:
 - [ ] Routes: `app.get/post/put/patch/delete` + `app.on(method, ...)` + `app.on([methods], ...)`
 - [ ] Request schemas: detect zValidator (param/query/json/form/header/cookie) → map to OpenAPI params/body
 - [ ] Response: detect `c.json()` / `c.text()` / `c.html()` / `c.body()` / `c.redirect()` calls, extract status codes
-- [ ] Response types (Tier 1): handler return type annotation → JSON Schema
-- [ ] Response types (Tier 2): inline object literal shape detection
-- [ ] Response types (Tier 3): Drizzle table type → JSON Schema
-- [ ] Response types (Tier 4): type tracing through variable assignments
+- [ ] Response types (Tier 1): AST-walk handler body for `c.json()` calls → `getType()` on data arg → JSON Schema
+- [ ] Response types (Tier 2): JSDoc `@returns` → `$ref` fallback
+- [ ] Response types (Tier 3): status code only (fallback)
 - [ ] JSDoc: `@tags`, `@summary`, `@description`, `@public`, `@security`, `@deprecated`, `@hide`, `@operationId`, `@returns`, `@error`, `@param`, `@header`
 - [ ] Schema registry: demand-driven Zod schemas → `components.schemas` (only schemas referenced by endpoints)
 - [ ] Drizzle: `pgTable`/`mysqlTable`/`sqliteTable`/`singlestoreTable` → JSON Schema (demand-driven, from endpoints)

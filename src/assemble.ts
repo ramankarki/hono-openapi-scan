@@ -28,28 +28,40 @@ interface OpenAPISpec {
   security?: Array<Record<string, string[]>>
 }
 
-/** Default Stripe-style error schema */
+/** Default RFC 9457-style error schema */
 function buildDefaultErrorSchema(): Record<string, any> {
   return {
     type: 'object',
+    required: ['code', 'message'],
     properties: {
-      success: { type: 'boolean', const: false, description: 'Always false for error responses' },
-      error: {
-        type: 'object',
-        description: 'Error details',
-        properties: {
-          type: {
-            type: 'string',
-            enum: ['authentication_error', 'authorization_error', 'validation_error', 'not_found_error', 'conflict_error', 'internal_server_error'],
-            description: 'Broad error category',
+      code: {
+        type: 'string',
+        description: 'Machine-readable error code. Stable across versions. SCREAMING_SNAKE_CASE.',
+        example: 'RESOURCE_NOT_FOUND',
+      },
+      message: {
+        type: 'string',
+        description: 'Human-readable error message',
+        example: 'No resource exists with the given ID',
+      },
+      status: {
+        type: 'integer',
+        description: 'HTTP status code (mirrored for convenience)',
+        example: 404,
+      },
+      details: {
+        type: 'array',
+        description: 'Field-level validation errors (when applicable)',
+        items: {
+          type: 'object',
+          properties: {
+            field: { type: 'string', description: 'Path to the invalid field', example: 'body.email' },
+            message: { type: 'string', description: "What's wrong with this field", example: 'Invalid email format' },
+            code: { type: 'string', description: 'Machine-readable validation code', example: 'INVALID_FORMAT' },
           },
-          code: { type: 'string', description: 'Machine-readable error code (e.g. user_not_found)' },
-          message: { type: 'string', description: 'Human-readable error message' },
         },
-        required: ['type', 'code', 'message'],
       },
     },
-    required: ['success', 'error'],
   }
 }
 
@@ -149,13 +161,36 @@ export function assembleSpec(routes: RouteInfo[], config: ScanConfig, files?: an
     }
   }
 
-  // Register Drizzle tables as schemas (capitalize table names: users → Users)
+  // Register Drizzle tables as schemas
+  // Two-pass: first detect which tables response shapes reference, then register
   if (files && files.length > 0) {
     const drizzleTables = findDrizzleTables(files)
+    
+    // Pass 1: check response inline schemas against all Drizzle tables
+    const matchedDrizzle = new Set<string>()
     for (const [name, table] of drizzleTables) {
-      const pascalName = name.charAt(0).toUpperCase() + name.slice(1)
-      if (!schemas[pascalName]) {
-        schemas[pascalName] = drizzleTableToSchema(table)
+      // Shape match: check if any response inline schema matches this table
+      const tableSchema = drizzleTableToSchema(table)
+      for (const route of visibleRoutes) {
+        if (route.handler?.responses) {
+          for (const resp of route.handler.responses) {
+            if (resp.schema && !resp.schema.$ref && resp.schema.properties) {
+              if (schemaPropertiesMatch(resp.schema.properties, tableSchema.properties || {})) {
+                matchedDrizzle.add(name)
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Register matched tables
+    for (const [name, table] of drizzleTables) {
+      if (matchedDrizzle.has(name)) {
+        const pascalName = name.charAt(0).toUpperCase() + name.slice(1)
+        if (!schemas[pascalName]) {
+          schemas[pascalName] = drizzleTableToSchema(table)
+        }
       }
     }
   }
@@ -195,6 +230,11 @@ export function assembleSpec(routes: RouteInfo[], config: ScanConfig, files?: an
       }
     }
   }
+
+  // Phase 2d: Normalize response schemas — replace inline schemas that match
+  // component schemas with $ref. This catches Drizzle table types resolved via
+  // `as typeof table.$inferSelect` where ts-morph produces anonymous types.
+  normalizeResponseRefs(visibleRoutes, schemas)
 
   // Phase 3: Build routes (now schemas are available for parameter expansion)
   for (const route of visibleRoutes) {
@@ -325,14 +365,54 @@ function buildParameters(route: RouteInfo, schemasCache: Record<string, any>): a
         })
       }
     }
-    if (mw.type === 'zValidator' && mw.target === 'header') {
-      params.push({
-        name: 'header',
-        in: 'header',
-        required: false,
-        schema: { type: 'object' },
-        description: 'Request headers',
-      })
+    if (mw.type === 'zValidator' && mw.target === 'header' && mw.schema?.exportName) {
+      // Expand individual header properties from schema
+      const schemaName = mw.schema.exportName
+      const resolved = schemasCache[schemaName]
+      if (resolved?.properties) {
+        for (const [propName, propSchema] of Object.entries(resolved.properties)) {
+          const required = resolved.required?.includes(propName) || false
+          params.push({
+            name: propName,
+            in: 'header',
+            required,
+            schema: propSchema,
+            description: (propSchema as any).description,
+          })
+        }
+      } else {
+        params.push({
+          name: 'header',
+          in: 'header',
+          required: false,
+          schema: { $ref: `#/components/schemas/${schemaName}` },
+          description: 'Request headers',
+        })
+      }
+    }
+    if (mw.type === 'zValidator' && mw.target === 'cookie' && mw.schema?.exportName) {
+      // Expand individual cookie properties from schema
+      const schemaName = mw.schema.exportName
+      const resolved = schemasCache[schemaName]
+      if (resolved?.properties) {
+        for (const [propName, propSchema] of Object.entries(resolved.properties)) {
+          const required = resolved.required?.includes(propName) || false
+          params.push({
+            name: propName,
+            in: 'cookie',
+            required,
+            schema: propSchema,
+            description: (propSchema as any).description,
+          })
+        }
+      } else {
+        params.push({
+          name: 'cookie',
+          in: 'cookie',
+          required: false,
+          schema: { $ref: `#/components/schemas/${schemaName}` },
+        })
+      }
     }
   }
 
@@ -378,14 +458,17 @@ function buildResponses(route: RouteInfo, config: ScanConfig, authScopes?: any[]
     for (const resp of route.handler.responses) {
       const key = String(resp.status)
       if (!responses[key]) {
-        // If handler has @returns JSDoc, use that schema for success responses
         let respWithSchema = { ...resp }
-        if (route.jsdoc.returns && (resp.status === 200 || resp.status === 201)) {
+
+        // Priority 1: c.json() data type resolved via ts-morph (already in resp.schema from routes.ts)
+        // Priority 2: JSDoc @returns (overrides if no c.json schema)
+        if (!respWithSchema.schema && route.jsdoc.returns && (resp.status === 200 || resp.status === 201)) {
           const returnsName = route.jsdoc.returns.replace(/[{}]/g, '').trim()
           if (returnsName) {
             respWithSchema.schema = { $ref: `#/components/schemas/${returnsName}` }
           }
         }
+
         responses[key] = buildSingleResponse(respWithSchema)
       }
     }
@@ -450,11 +533,18 @@ function buildSingleResponse(resp: ResponseInfo): Record<string, any> {
     description: resp.description,
   }
 
+  // Always include content for JSON responses (with schema if available)
+  // For non-JSON, include content with content-type (no schema needed)
   if (resp.schema) {
     obj.content = {
       [resp.contentType]: {
         schema: resp.schema,
       },
+    }
+  } else if (resp.contentType !== 'application/json') {
+    // Non-JSON types still need content declaration (text/plain, application/octet-stream, etc.)
+    obj.content = {
+      [resp.contentType]: {},
     }
   }
 
@@ -493,6 +583,84 @@ function matchesGlob(path: string, pattern: string): boolean {
   if (pattern === '*') return true
   const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
   return regex.test(path)
+}
+
+/**
+ * Walk all route response schemas and replace inline object schemas that match
+ * component schemas with $ref. Handles ts-morph anonymous types from Drizzle `as` assertions.
+ */
+function normalizeResponseRefs(routes: RouteInfo[], schemas: Record<string, any>): void {
+  for (const route of routes) {
+    if (route.handler?.responses) {
+      for (const resp of route.handler.responses) {
+        if (resp.schema && !resp.schema.$ref && resp.schema.properties) {
+          const matched = findMatchingSchemaRef(resp.schema, schemas)
+          if (matched) {
+            resp.schema = { $ref: `#/components/schemas/${matched}` }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Check if two sets of schema properties match (same keys).
+ */
+function schemaPropertiesMatch(a: Record<string, any>, b: Record<string, any>): boolean {
+  const aKeys = Object.keys(a)
+  const bKeys = Object.keys(b)
+  if (aKeys.length === 0 || bKeys.length === 0) return false
+  if (aKeys.length > bKeys.length) return schemaPropertiesMatch(b, a)
+  return aKeys.every(k => bKeys.includes(k))
+}
+
+/**
+ * Check if an inline object schema matches a component schema by property names.
+ * Returns the component schema name if matched, null otherwise.
+ */
+function findMatchingSchemaRef(inline: Record<string, any>, schemas: Record<string, any>): string | null {
+  if (!inline.properties || typeof inline.properties !== 'object') return null
+
+  const inlineKeys = new Set(Object.keys(inline.properties))
+  if (inlineKeys.size === 0) return null
+
+  let bestMatch: string | null = null
+  let bestScore = 0
+
+  for (const [name, schema] of Object.entries(schemas)) {
+    if (!schema.properties || typeof schema.properties !== 'object') continue
+    if (name === 'Error') continue // Don't replace with error schema
+
+    const schemaKeys = new Set(Object.keys(schema.properties))
+    if (schemaKeys.size === 0) continue
+
+    // Calculate match score: intersection / union (Jaccard)
+    let intersection = 0
+    for (const k of inlineKeys) {
+      if (schemaKeys.has(k)) intersection++
+    }
+    const union = new Set([...inlineKeys, ...schemaKeys]).size
+    const score = intersection / union
+
+    // Exact match (all properties match exactly)
+    if (score === 1.0 && inlineKeys.size === schemaKeys.size) {
+      return name
+    }
+
+    // Near match (at least 80% overlap, and inline is subset of schema)
+    if (score >= 0.8 && inlineKeys.size <= schemaKeys.size && score > bestScore) {
+      bestScore = score
+      bestMatch = name
+    }
+  }
+
+  // Only match if inline has at least 3 properties and score >= 0.8
+  if (bestMatch && inlineKeys.size >= 3 && bestScore >= 0.8) {
+    return bestMatch
+  }
+
+  return null
 }
 
 /**

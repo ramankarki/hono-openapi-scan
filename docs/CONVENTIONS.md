@@ -170,11 +170,10 @@ return c.json({ error: '...' }, 404)  // Error
 - **Data shape:** first argument type — resolved via ts-morph from variable or expression
 - **Multiple paths:** if/else branches with different `c.json()` calls → multiple response statuses
 
-### Response type detection priority:
-1. Handler return type annotation: `async (c): Promise<User> =>`
-2. JSDoc `@returns {User}` on handler
-3. First arg to `c.json()` traced through ts-morph
-4. Fallback: no schema, just status code
+### Response type detection:
+- **Primary:** ts-morph AST walks the handler body to find `c.json(data, status)` calls, then calls `getType()` on the data argument to produce full JSON Schema with properties, types, and nullability.
+- **JSDoc `@returns {SchemaName}`:** produces a `$ref` to the named schema when no c.json() schema is resolved.
+- **Fallback:** status code only (e.g., for `c.get('user')` where Hono context types are unresolved).
 
 ---
 
@@ -215,7 +214,7 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 - **Auth middleware presence:** finds `app.use('*', authMiddleware)` or `app.use(authMiddleware)` → marks all routes as authenticated
 - **Better Auth routes:** `app.on(['POST', 'GET'], '/api/auth/*', ...)` or `app.route('/api/auth', auth.handler())` → auto-excluded from spec (or tagged as "Auth")
 - **`@public` override:** route-level JSDoc tag overrides auth requirement
-- **Hono Variables type:** `new Hono<{ Variables: { user: ..., session: ... } }>()` → tells us user/session types exist
+
 
 ---
 
@@ -268,9 +267,7 @@ export const posts = pgTable('posts', {
 
 ### Detection:
 
-Find `pgTable('tableName', { ... })` calls → extract table name from first arg. Use ts-morph `getType()` on the exported const to get the fully-resolved table type → walk properties → build `components.schemas.TableName`.
-
-**Type-inferred, not AST-parsed.** TypeScript resolves column types at compile time. `getType()` gives us the final shape directly. No need to introspect drizzle-orm column builders.
+Find `pgTable('tableName', { ... })` / `mysqlTable` / `sqliteTable` / `singlestoreTable` calls. Column types are detected by matching the callee text (`uuid()`, `text()`, `integer()`, etc.) with nullable/default/primaryKey inferred from chained methods. Registration is **demand-driven** — only tables referenced by endpoint response types appear in `components.schemas`.
 
 Also: `mysqlTable`, `sqliteTable`, `singlestoreTable`.
 
@@ -314,7 +311,7 @@ export const UserListResponse = z.object({
 
 ### How schemas get registered:
 
-**Demand-driven.** Only Zod schemas referenced by endpoints (via `zValidator`, handler return type, or JSDoc `@returns`) are registered in `components.schemas`. Unreferenced schemas in reachable files are ignored.
+**Demand-driven.** Only Zod schemas referenced by endpoints (via `zValidator`, c.json() data type resolution, or JSDoc `@returns`) are registered in `components.schemas`. Unreferenced schemas in reachable files are ignored.
 
 If a schema references another schema (e.g., `z.array(UserSchema)`), we use `$ref` instead of inlining.
 
@@ -338,12 +335,11 @@ components:
 
 ### Linking schemas to responses:
 
-When a handler return type or `c.json()` arg references a Zod schema export, we link via `$ref`:
+When a `c.json()` data argument's type matches an exported Zod schema's shape, or JSDoc `@returns` names a schema, we link via `$ref`:
 
 ```ts
 // If handler returns: c.json({ data: users, cursor: nextCursor }, 200)
-// and ts-morph resolves the type to match UserListResponse's shape,
-// or the handler has type annotation: async (c): Promise<z.infer<typeof UserListResponse>>
+// and ts-morph resolves the type, or the type references a known schema,
 // → response uses $ref: '#/components/schemas/UserListResponse'
 ```
 
@@ -454,7 +450,7 @@ Detection: `zValidator('form', ...)` → `requestBody.content["multipart/form-da
 | Form data | `zValidator('form', z.object({...}))` | Find in middleware array, extract schema |
 | Headers | `zValidator('header', z.object({...}))` | Find in middleware array, extract schema |
 | Response | `c.json(data, status)` | Find return statements in handler body |
-| Response type | Handler return annotation or type tracing | ts-morph type resolution |
+| Response type | AST walk `c.json()` + ts-morph `getType()` on data arg | Full JSON Schema with properties, types, nullability |
 | Auth | `app.use('*', authMiddleware)` | Trace middleware to auth check |
 | Public route | `@public` JSDoc | Parse JSDoc on handler |
 | Tags | `@tags` JSDoc or auto from path | Parse JSDoc or path segment |
