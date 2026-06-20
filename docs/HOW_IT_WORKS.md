@@ -18,21 +18,69 @@ The scanner **reads your code without running it**. It understands your routes, 
 
 ---
 
-## The Big Picture
+## The Big Picture — Call Tree
 
-When you run `hono-openapi-scan src/index.ts`, here's what happens:
+When you run `hono-openapi-scan src/index.ts`, here's the full pipeline showing which file and function handles each task:
 
 ```
-1. Resolve    Find all files your project uses
-2. Parse      Read each file into a structured tree (AST)
-3. Find       Locate Hono apps, routes, schemas
-4. Extract    Pull out paths, methods, validation, JSDoc
-5. Convert    Zod → JSON Schema, Drizzle → JSON Schema
-6. Assemble   Build the OpenAPI 3.1 object
-7. Write      Output openapi.json
+📦 cli.ts
+ └─ main()
+     ├─ loadConfig()                        ── config.ts
+     └─ scan(config)                        ── scanner.ts
+          │
+          ├─ createProject(entry)           ── project.ts
+          │   ├─ new Project(tsconfig)        ts-morph
+          │   └─ resolveImportTree()          BFS from entry, follow imports
+          │
+          ├─ buildAppRegistry(files)        ── routes.ts
+          │   ├─ forEachDescendant:            find new Hono()
+          │   └─ detectAuthScope():            find app.use('*', authMiddleware)
+          │
+          ├─ collectKnownSchemaNames()      ── scanner.ts
+          │   └─ scan all files for:           exported z.object/enum/array + pgTable
+          │
+          ├─ walkAppRoutes(entryApp)        ── routes.ts
+          │   └─ forEachDescendant:
+          │       ├─ .get/.post/.put/.patch/.delete/.on()
+          │       │   └─ extractRoute()
+          │       │       ├─ extractMiddleware()    → zValidator detection
+          │       │       ├─ extractHandlerInfo()   → return type
+          │       │       ├─ extractResponsesFromFunction()
+          │       │       │   ├─ forEachDescendant (AST walk handler body)
+          │       │       │   └─ extractResponseCall()
+          │       │       │       ├─ resolveExpressionType()  ── type-walker.ts
+          │       │       │       │   └─ typeToSchemaRef()      getType() → JSON Schema
+          │       │       │       ├─ c.json()  → schema from data arg
+          │       │       │       ├─ c.body()  → application/octet-stream
+          │       │       │       ├─ c.text()  → text/plain
+          │       │       │       ├─ c.html()  → text/html
+          │       │       │       └─ c.redirect() → 302
+          │       │       ├─ parseJSDocFromNode()  ── jsdoc.ts
+          │       │       ├─ generateSummary()
+          │       │       ├─ generateTags()
+          │       │       └─ generateOperationId()
+          │       └─ .route('/prefix', subApp)
+          │           └─ resolveSubApp()         follow imports → recurse
+          │
+          └─ assembleSpec(routes, config)   ── assemble.ts
+               ├─ Phase 1: Collect Zod schemas (from middleware + @returns)
+               ├─ Phase 2: Build schemas
+               │   ├─ resolveZodSchema()     ── zod-schema.ts
+               │   │   └─ convertZodAST()      walk z.object/enum/array/string/…
+               │   ├─ findDrizzleTables()    ── drizzle.ts
+               │   │   └─ extractColumnInfo()   text match on uuid()/text()/…
+               │   ├─ schemaPropertiesMatch()   shape-match for demand-driven
+               │   ├─ drizzleTableToSchema() ── drizzle.ts
+               │   ├─ inferExample()            auto-generate examples
+               │   └─ normalizeResponseRefs()   inline schema → $ref
+               ├─ Phase 3: Build routes
+               │   ├─ buildParameters()         path/query/header/cookie
+               │   ├─ buildRequestBody()        json/form with writeOnly
+               │   └─ buildResponses()          handler + auto errors
+               └─ writeFileSync(output)
 ```
 
-Let's go through each step.
+Let's go through each phase in detail.
 
 ---
 
