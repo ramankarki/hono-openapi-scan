@@ -286,7 +286,7 @@ function extractRoute(
           if (decl) {
             const doc = parseJSDocFromNode(decl)
             if (doc) handlerJSDoc = doc
-            const responses = extractResponsesFromFunction(decl, knownSchemas)
+            const responses = extractResponsesFromFunction(decl, knownSchemas, middleware)
             if (responses.length > 0) handler.responses = responses
           }
         }
@@ -308,7 +308,7 @@ function extractRoute(
   if (handler && handler.responses.length === 0 && args.length > 0) {
     const lastArg = args[args.length - 1]
     if (lastArg) {
-      const responses = extractResponsesFromFunction(lastArg, knownSchemas)
+      const responses = extractResponsesFromFunction(lastArg, knownSchemas, middleware)
       handler.responses = responses
     }
   }
@@ -467,15 +467,16 @@ function extractHandlerInfo(node: AnyNode, _knownSchemas: Set<string>): HandlerI
  * Walk the AST of a function body to find c.json(), c.text(), c.html(), c.body(), and c.redirect() calls.
  * For each call, extract status code and resolve the data type via ts-morph.
  */
-function extractResponsesFromFunction(node: AnyNode, knownSchemas: Set<string>): ResponseInfo[] {
+function extractResponsesFromFunction(node: AnyNode, knownSchemas: Set<string>, middleware?: MiddlewareInfo[]): ResponseInfo[] {
   const responses: ResponseInfo[] = []
   const seenStatuses = new Set<number>()
+  const mw = middleware || []
 
   // Walk all descendants looking for c.json / c.text / c.html / c.body / c.redirect calls
   try {
     node.forEachDescendant((descendant: AnyNode) => {
       if (descendant.getKindName() !== 'CallExpression') return
-      extractResponseCall(descendant, responses, seenStatuses, knownSchemas)
+      extractResponseCall(descendant, responses, seenStatuses, knownSchemas, mw)
     })
   } catch {
     // Fallback: try regex on text for unresolvable nodes
@@ -506,11 +507,124 @@ function extractResponsesFromFunction(node: AnyNode, knownSchemas: Set<string>):
   return responses
 }
 
+/**
+ * Walk an ObjectLiteralExpression, handling spreads from c.req.valid().
+ * For spreads, resolves the zValidator schema from middleware (avoids ZodType in ts-morph).
+ * For explicit properties, type-walks the value expression.
+ */
+function walkObjectLiteral(
+  objLit: AnyNode,
+  knownSchemas: Set<string>,
+  middleware: MiddlewareInfo[],
+): SchemaRef {
+  const schema: SchemaRef = { type: 'object', properties: {} }
+  const required: string[] = []
+  const spreadRefs: string[] = []
+
+  const props: AnyNode[] = objLit.getProperties?.() || []
+
+  for (const prop of props) {
+    const kind = prop.getKindName?.()
+
+    if (kind === 'SpreadAssignment') {
+      const spreadExpr = prop.getExpression?.()
+      if (spreadExpr) {
+        const spreadSchema = resolveSpreadSource(spreadExpr, knownSchemas, middleware)
+        if (spreadSchema) {
+          if (spreadSchema.$ref) {
+            // Defer merge: store $ref for normalizeResponseRefs to resolve later
+            const refName = spreadSchema.$ref.replace('#/components/schemas/', '')
+            if (!spreadRefs.includes(refName)) spreadRefs.push(refName)
+          } else if (spreadSchema.properties) {
+            for (const [k, v] of Object.entries(spreadSchema.properties)) {
+              schema.properties![k] = v as SchemaRef
+            }
+            if (spreadSchema.required) {
+              for (const r of spreadSchema.required) {
+                if (!required.includes(r)) required.push(r)
+              }
+            }
+          }
+        }
+      }
+    } else if (kind === 'PropertyAssignment' || kind === 'ShorthandPropertyAssignment') {
+      const propName = prop.getName?.()
+      if (!propName) continue
+
+      const valueExpr = prop.getInitializer?.() || prop
+      try {
+        const resolved = resolveExpressionType(valueExpr, knownSchemas) || undefined
+        if (resolved && (resolved.type || resolved.$ref || resolved.properties)) {
+          schema.properties![propName] = resolved
+          if (resolved.type !== 'undefined' && !resolved.nullable) {
+            required.push(propName)
+          }
+        }
+      } catch {
+        schema.properties![propName] = { type: 'string' }
+      }
+    }
+  }
+
+  if (required.length > 0) schema.required = required
+
+  // Store deferred spread refs for normalizeResponseRefs to merge
+  if (spreadRefs.length > 0) {
+    ;(schema as any)._spreadRefs = spreadRefs
+    // Make space for merged properties by not claiming this schema is complete
+  }
+
+  return schema
+}
+
+/**
+ * Resolve a spread source expression. If it traces to c.req.valid(),
+ * use the zValidator schema from the route's middleware chain.
+ */
+function resolveSpreadSource(
+  expr: AnyNode,
+  knownSchemas: Set<string>,
+  middleware: MiddlewareInfo[],
+): SchemaRef | undefined {
+  // Trace Identifier → variable declaration → initializer → c.req.valid() call
+  if (expr.getKindName?.() === 'Identifier') {
+    const sym = expr.getSymbol?.()
+    const decls = sym?.getDeclarations?.()
+    if (decls?.[0]) {
+      const init = decls[0].getInitializer?.()
+      if (init?.getKindName?.() === 'CallExpression') {
+        const callee = init.getExpression?.()
+        if (callee?.getKindName?.() === 'PropertyAccessExpression') {
+          const obj = callee.getExpression?.()?.getText?.()
+          const method = callee.getName?.()
+          // c.req.valid('json') → target = 'json'
+          if (obj === 'c.req' && method === 'valid') {
+            const args = init.getArguments?.() || []
+            const target = extractStringLiteral(args[0])
+            if (target) {
+              // Find matching zValidator middleware
+              const mw = middleware.find(m => m.type === 'zValidator' && m.target === target && m.schema?.exportName)
+              if (mw?.schema?.exportName) {
+                // Return a schema that will be resolved later via $ref
+                return {
+                  $ref: `#/components/schemas/${mw.schema.exportName}`,
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return undefined
+}
+
 function extractResponseCall(
   callNode: AnyNode,
   responses: ResponseInfo[],
   seenStatuses: Set<number>,
   knownSchemas: Set<string>,
+  middleware: MiddlewareInfo[],
 ): void {
   const callee = callNode.getExpression?.()
   if (!callee || callee.getKindName?.() !== 'PropertyAccessExpression') return
@@ -539,29 +653,44 @@ function extractResponseCall(
       let schema: SchemaRef | undefined
       try {
         if (dataArg) {
-          // Trace variable references back to their object literal for type walking.
-          // `as` assertions produce synthetic types with unresolvable property nodes.
-          let typeArg = dataArg
-          if (dataArg.getKindName?.() === 'Identifier') {
-            const sym = dataArg.getSymbol?.()
-            const decls = sym?.getDeclarations?.()
-            if (decls?.[0]) {
-              const init = decls[0].getInitializer?.()
-              if (init) {
-                // Unwrap AsExpression: use the expression (object literal) before 'as'
-                if (init.getKindName?.() === 'AsExpression') {
-                  typeArg = init.getExpression?.() || init
-                } else {
-                  typeArg = init
+          // Object literals with spreads: walk individual properties.
+          // Spread from c.req.valid() uses zValidator schema (avoids ZodType in ts-morph).
+          if (dataArg.getKindName?.() === 'ObjectLiteralExpression') {
+            schema = walkObjectLiteral(dataArg, knownSchemas, middleware)
+          } else {
+            // Trace variable references back to their declaration for type walking.
+            let typeArg = dataArg
+            if (dataArg.getKindName?.() === 'Identifier') {
+              const sym = dataArg.getSymbol?.()
+              const decls = sym?.getDeclarations?.()
+              if (decls?.[0]) {
+                const init = decls[0].getInitializer?.()
+                if (init) {
+                  if (init.getKindName?.() === 'ObjectLiteralExpression') {
+                    // Variable assigned an object literal — walk it directly
+                    schema = walkObjectLiteral(init, knownSchemas, middleware)
+                  } else if (init.getKindName?.() === 'AsExpression') {
+                    const expr = init.getExpression?.()
+                    if (expr?.getKindName?.() === 'ObjectLiteralExpression') {
+                      schema = walkObjectLiteral(expr, knownSchemas, middleware)
+                    } else {
+                      schema = resolveExpressionType(expr, knownSchemas) || undefined
+                    }
+                  } else {
+                    schema = resolveExpressionType(typeArg, knownSchemas) || undefined
+                  }
                 }
               }
+            } else if (dataArg.getKindName?.() === 'AsExpression') {
+              const expr = dataArg.getExpression?.()
+              if (expr?.getKindName?.() === 'ObjectLiteralExpression') {
+                schema = walkObjectLiteral(expr, knownSchemas, middleware)
+              } else {
+                schema = resolveExpressionType(expr, knownSchemas) || undefined
+              }
+            } else {
+              schema = resolveExpressionType(typeArg, knownSchemas) || undefined
             }
-          } else if (dataArg.getKindName?.() === 'AsExpression') {
-            typeArg = dataArg.getExpression?.() || dataArg
-          }
-          const resolved = resolveExpressionType(typeArg, knownSchemas)
-          if (resolved && (resolved.type || resolved.$ref || resolved.properties)) {
-            schema = resolved
           }
         }
       } catch { /* type resolution failed, leave schema undefined */ }

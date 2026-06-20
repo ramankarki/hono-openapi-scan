@@ -4,20 +4,6 @@ import type { SchemaRef } from './types'
 type AnyNode = any
 
 /**
- * Check if a type looks like a ZodType wrapper (has _def + ~standard markers).
- * These appear when c.req.valid() spread resolves to raw Zod schema objects.
- */
-function isZodTypeObject(type: Type): boolean {
-  try {
-    const props = type.getProperties()
-    const names = new Set(props.map((p: any) => p.getName()))
-    return names.has('_def') || names.has('~standard')
-  } catch {
-    return false
-  }
-}
-
-/**
  * Convert a ts-morph Type to a SchemaRef (JSON Schema fragment).
  * Uses known schema names to produce $ref for Zod/Drizzle types.
  */
@@ -152,11 +138,12 @@ export function typeToSchemaRef(type: Type, knownSchemas: Set<string>): SchemaRe
             if (callSigs.length > 0) continue
           } catch { /* not callable */ }
 
-          // Skip ZodType wrapper objects (have _def + ~standard).
-          // c.req.valid() spread resolves to raw Zod schema via ts-morph,
-          // not z.infer<>. Explicit properties still captured; use @returns
-          // JSDoc for full spread type documentation.
-          if (isZodTypeObject(propType)) continue
+          // Safety: skip ZodType wrappers that may appear from unresolved generics
+          try {
+            const childProps = propType.getProperties()
+            const childNames = new Set(childProps.map((p: any) => p.getName()))
+            if (childNames.has('~standard') || childNames.has('_def')) continue
+          } catch { /* not a Zod type */ }
 
           const propSchema = typeToSchemaRef(propType, knownSchemas)
 

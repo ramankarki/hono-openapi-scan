@@ -47,13 +47,22 @@
                   "type": "object",
                   "properties": {
                     "version": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "1.0.0"
+                      ]
                     },
                     "environment": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "production"
+                      ]
                     },
                     "region": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "us-east-1"
+                      ]
                     },
                     "clientId": {
                       "type": "string"
@@ -99,7 +108,10 @@
                   "type": "object",
                   "properties": {
                     "status": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "ok"
+                      ]
                     },
                     "timestamp": {
                       "type": "string"
@@ -318,17 +330,58 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
                     },
-                    "id": {
-                      "type": "string"
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 200,
+                      "description": "Post title",
+                      "example": "string"
+                    },
+                    "content": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "Post body (markdown)",
+                      "example": "string"
+                    },
+                    "excerpt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "maxLength": 500,
+                      "description": "Short description",
+                      "example": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "published",
+                        "archived"
+                      ],
+                      "description": "Publication status",
+                      "example": "draft"
+                    },
+                    "publishedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time",
+                      "description": "Publication date",
+                      "example": "2026-01-15T10:30:00Z"
                     }
                   },
                   "required": [
-                    "updatedAt",
-                    "id"
+                    "id",
+                    "updatedAt"
                   ]
                 }
               }
@@ -419,7 +472,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "description": "Response (z.infer<ZodObject<{ id: ZodString; title: ZodString; slug: ZodString; content: ZodString; excerpt: ZodNullable<ZodString>; status: ZodEnum<[\"draft\", \"published\", \"archived\"]>; authorId: ZodString; viewCount: ZodNumber; publishedAt: ZodNullable<ZodDate>; createdAt: ZodDate; updatedAt: ZodDate; }, \"strip\", ZodTypeAny, { status: \"draft\" | \"published\" | \"archived\"; authorId: string; id: string; title: string; slug: string; content: string; excerpt: string | null; viewCount: number; publishedAt: Date | null; createdAt: Date; updatedAt: Date; }, { status: \"draft\" | \"published\" | \"archived\"; authorId: string; id: string; title: string; slug: string; content: string; excerpt: string | null; viewCount: number; publishedAt: Date | null; createdAt: Date; updatedAt: Date; }>>)"
+                  "description": "Response (any)"
                 }
               }
             }
@@ -545,43 +598,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "excerpt": {
-                      "type": "string",
-                      "nullable": true
-                    },
-                    "authorId": {
-                      "type": "object",
-                      "description": "Response (any)"
-                    },
-                    "viewCount": {
-                      "type": "number"
-                    },
-                    "publishedAt": {
-                      "type": "string",
-                      "format": "date-time",
-                      "nullable": true
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "updatedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "id": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "authorId",
-                    "viewCount",
-                    "createdAt",
-                    "updatedAt",
-                    "id"
-                  ]
+                  "$ref": "#/components/schemas/PostSchema"
                 }
               }
             }
@@ -1115,17 +1132,43 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "updatedAt": {
                       "type": "string",
                       "format": "date-time"
                     },
-                    "id": {
-                      "type": "string"
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100,
+                      "description": "Display name",
+                      "example": "string"
+                    },
+                    "image": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "uri",
+                      "description": "Avatar URL",
+                      "example": "https://example.com"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "admin",
+                        "user",
+                        "moderator"
+                      ],
+                      "description": "User role",
+                      "example": "admin"
                     }
                   },
                   "required": [
-                    "updatedAt",
-                    "id"
+                    "id",
+                    "updatedAt"
                   ]
                 }
               }
@@ -1284,7 +1327,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "description": "Response (unknown)"
+                  "description": "Response ({})"
                 }
               }
             }
@@ -1359,7 +1402,10 @@
                       ]
                     },
                     "language": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "en"
+                      ]
                     }
                   },
                   "required": [
@@ -1444,7 +1490,10 @@
                   "type": "object",
                   "properties": {
                     "url": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "https://cdn.example.com/avatars/user-123.webp"
+                      ]
                     }
                   },
                   "required": [
@@ -1563,7 +1612,10 @@
                   "type": "object",
                   "properties": {
                     "id": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "legacy-id"
+                      ]
                     },
                     "username": {
                       "type": "string"

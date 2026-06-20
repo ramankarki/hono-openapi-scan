@@ -602,7 +602,32 @@ function normalizeResponseRefs(routes: RouteInfo[], schemas: Record<string, any>
   for (const route of routes) {
     if (route.handler?.responses) {
       for (const resp of route.handler.responses) {
-        if (resp.schema && !resp.schema.$ref && resp.schema.properties) {
+        if (!resp.schema || resp.schema.$ref) continue
+
+        // Merge deferred spread refs (from c.req.valid() via walkObjectLiteral)
+        const spreadRefs: string[] = (resp.schema as any)._spreadRefs || []
+        delete (resp.schema as any)._spreadRefs
+        for (const refName of spreadRefs) {
+          const target = schemas[refName]
+          if (target?.properties) {
+            resp.schema.properties = resp.schema.properties || {}
+            const req = resp.schema.required || []
+            for (const [k, v] of Object.entries(target.properties)) {
+              if (!resp.schema.properties[k]) {
+                resp.schema.properties[k] = v
+              }
+            }
+            if (target.required) {
+              for (const r of target.required as string[]) {
+                if (!req.includes(r)) req.push(r)
+              }
+            }
+            if (req.length > 0) resp.schema.required = req
+          }
+        }
+
+        // Shape-match against component schemas
+        if (resp.schema.properties) {
           const matched = findMatchingSchemaRef(resp.schema, schemas, route)
           if (matched) {
             resp.schema = { $ref: `#/components/schemas/${matched}` }
