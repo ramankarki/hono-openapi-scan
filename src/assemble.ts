@@ -469,9 +469,11 @@ function buildResponses(route: RouteInfo, config: ScanConfig, authScopes?: any[]
       if (!responses[key]) {
         let respWithSchema = { ...resp }
 
-        // Priority 1: c.json() data type resolved via ts-morph (already in resp.schema from routes.ts)
-        // Priority 2: JSDoc @returns (overrides if no c.json schema)
-        if (!respWithSchema.schema && route.jsdoc.returns && (resp.status === 200 || resp.status === 201)) {
+        // JSDoc @returns overrides fallback schemas (empty objects, c.get() with unresolved types)
+        const isFallback = !resp.schema ||
+          (resp.schema.description || '').startsWith('Response (') ||
+          (resp.schema.properties && Object.keys(resp.schema.properties).length === 0)
+        if (isFallback && route.jsdoc.returns && (resp.status === 200 || resp.status === 201)) {
           const returnsName = route.jsdoc.returns.replace(/[{}]/g, '').trim()
           if (returnsName) {
             respWithSchema.schema = { $ref: `#/components/schemas/${returnsName}` }

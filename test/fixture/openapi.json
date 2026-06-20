@@ -1326,8 +1326,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "description": "Response ({})"
+                  "$ref": "#/components/schemas/UserSchema"
                 }
               }
             }

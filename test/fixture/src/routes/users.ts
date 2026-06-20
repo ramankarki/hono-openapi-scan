@@ -130,6 +130,7 @@ app.delete('/:id',
  *   token. Does not require a user ID — derives identity from the auth middleware.
  * @tags Users
  * @summary Get current user profile
+ * @returns {UserSchema}
  */
 app.get('/me', async (c) => {
   const user = c.get('user')
