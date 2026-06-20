@@ -436,6 +436,17 @@ Detection: `zValidator('form', ...)` → `requestBody.content["multipart/form-da
 - **Streaming responses** — `c.stream()` / `c.streamText()` — mark as `application/octet-stream` without schema
 - **Redirect responses** — `c.redirect()` → 302/301 response without body schema
 
+## 11. Known Limitations (Static Analysis Constraints)
+
+These patterns produce fallback schemas because ts-morph can't resolve them at compile time:
+
+| Pattern | Why it fails | Workaround |
+|---------|-------------|------------|
+| `const x = {...} satisfies Type` | `satisfies` is erased — ts-morph sees `any` | Use `const x: Type = {...}` or `as Type` |
+| `c.get('user')` / `c.get('session')` | Hono context generics (`Variables`) can't be resolved statically | Add `@returns {UserSchema}` JSDoc |
+| `z.preprocess()` / `z.transform()` / `z.custom()` | Arbitrary runtime transforms — no JSON Schema equivalent | Schema becomes `{type: "object"}` — document manually |
+| Spread of `c.req.valid()` with `satisfies` | Type erased before spread resolution | Use type annotation instead of `satisfies` |
+
 ---
 
 ## 11. Convention Summary (For Scanner Design)

@@ -127,7 +127,7 @@ src/
 - `hono-openapi-scan.config.ts` — Config with custom ErrorSchema, servers, security
 - `openapi.json` — Golden file: 22 operations, 22 component schemas, 86 $ref refs
 
-Running tests: `bun test` (from project root). 43 tests total.
+Running tests: `bun test` (from project root). 54 tests total (4 test files).
 
 ---
 

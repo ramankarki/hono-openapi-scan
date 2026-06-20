@@ -460,3 +460,14 @@ bunx serve openapi.json
 - **Replace RPC types** — use `hc<AppType>` for RPC; use the scanner for OpenAPI
 - **Handle WebSocket routes** — `upgradeWebSocket()` routes are skipped
 - **Detect dynamic routes** — if you generate routes in a loop at runtime, the scanner can't see them
+
+## Known Limitations
+
+Static analysis has inherent constraints. These patterns produce incomplete schemas:
+
+| Pattern | Why | Workaround |
+|---------|-----|------------|
+| `satisfies` operator | ts-morph sees `any` — type is erased | Use type annotation `: Type` or `as Type` |
+| `c.get('user')` | Hono `Variables` generic unresolvable | Add `@returns {UserSchema}` JSDoc |
+| `z.preprocess()` / `z.transform()` | Runtime transforms — no JSON Schema equivalent | Schema becomes `{type: "object"}` |
+| Dynamic routes (loops) | Not visible to AST | None — static analysis limit |

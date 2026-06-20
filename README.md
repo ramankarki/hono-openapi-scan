@@ -444,12 +444,25 @@ const config = await loadConfig('hono-openapi-scan.config.ts')
 const spec = await scan(config)
 ```
 
+## Limitations
+
+Static analysis can't see what isn't there. These patterns produce fallback schemas:
+
+| Pattern | Result | Workaround |
+|---------|--------|------------|
+| `satisfies` operator (`const x = {...} satisfies Type`) | ts-morph can't resolve — inline schema may be incomplete | Use type annotation `const x: Type = {...}` or `as Type` |
+| `c.get('user')` / `c.get('session')` | Hono context generics unresolvable → empty object | Add `@returns {UserSchema}` JSDoc |
+| Dynamic routes (generated in loops) | Invisible to AST — not detected | None (static analysis constraint) |
+| `z.preprocess()` / `z.transform()` / `z.custom()` | Can't convert to JSON Schema | Use standard Zod methods; schema becomes `{type: "object"}` |
+
+For patterns the scanner CAN detect, see [Detection Patterns](docs/CONVENTIONS.md).
+
 ## Development
 
 ```bash
 bun install
 bun run build
-bun test              # 42 tests
+bun test              # 54 tests
 bun run typecheck     # tsc --noEmit
 bun run publish:dry   # preview npm package
 ```

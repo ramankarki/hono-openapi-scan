@@ -716,7 +716,9 @@ No runtime deps. CLI only.
 | Import fails to resolve | Skip that import, warn |
 | Zod schema has circular ref | Detect cycle → use inline schema with `description: "circular reference"` |
 | `z.lazy()` | Can't resolve → skip, warn |
-| `z.custom()` / `z.preprocess()` | Can't convert to JSON Schema → `{ type: "object", description: "custom validation" }` |
+| `z.custom()` / `z.preprocess()` / `z.transform()` | Can't convert to JSON Schema → `{ type: "object", description: "custom validation" }` |
+| `satisfies` operator (`const x = {...} satisfies Type`) | ts-morph resolves to `any` — inline schema incomplete | Use type annotation `const x: Type = {...}` or `as Type` |
+| `c.get('user')` / `c.get('session')` | Hono context generics not resolvable → empty object | Add `@returns {SchemaName}` JSDoc |
 | Non-JSON response (`c.text()`, `c.html()`) | Mark as `text/plain` or `text/html`, no schema |
 | `c.redirect()` | Mark as 302/301, no body |
 | Better Auth route (`/api/auth/*`) | Auto-exclude from spec (or mark as `@hide`) |
