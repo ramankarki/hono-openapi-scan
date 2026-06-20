@@ -272,6 +272,15 @@ export function assembleSpec(routes: RouteInfo[], config: ScanConfig, files?: an
         : [{ bearerAuth: [] }]
     }
     if (route.security) {
+      // Validate @security references against config.securitySchemes
+      const definedSchemes = config.securitySchemes ? Object.keys(config.securitySchemes) : []
+      for (const secEntry of route.security) {
+        for (const schemeName of Object.keys(secEntry)) {
+          if (definedSchemes.length > 0 && !definedSchemes.includes(schemeName)) {
+            console.warn(`Warning: @security references "${schemeName}" on ${route.method} ${route.path}, but "${schemeName}" is not defined in config.securitySchemes`)
+          }
+        }
+      }
       operation.security = route.security
     }
 

@@ -28,6 +28,12 @@ export default defineConfig({
       bearerFormat: 'JWT',
       description: 'Better Auth session token. Obtain via POST /auth/sign-in or /auth/sign-up.',
     },
+    apiKey: {
+      type: 'apiKey',
+      in: 'header',
+      name: 'X-API-Key',
+      description: 'API key for legacy endpoints. Deprecated — migrate to bearerAuth.',
+    },
   },
 
   // ── Tags ──
@@ -44,7 +50,7 @@ export default defineConfig({
 
   // Auto-generated error responses on every route.
   // true (all: 400, 401, 404, 429, 500) | false (none) | [400, 401, 500] (custom list)
-  defaultErrorResponses: true,
+  defaultErrorResponses: [400, 401, 404, 500],
 
   // ── Paths that skip global auth (glob patterns) ──
   excludeAuth: ['/health', '/webhooks/*'],
