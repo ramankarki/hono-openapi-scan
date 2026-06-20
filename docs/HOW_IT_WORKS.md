@@ -77,7 +77,9 @@ When you run `hono-openapi-scan src/index.ts`, here's the full pipeline showing 
                │   ├─ buildParameters()         path/query/header/cookie
                │   ├─ buildRequestBody()        json/form with writeOnly
                │   └─ buildResponses()          handler + auto errors
-               └─ writeFileSync(output)
+               └─ return spec
+
+     └─ writeFileSync(output, json)         ── scanner.ts (fs built-in)
 ```
 
 Let's go through each phase in detail.
