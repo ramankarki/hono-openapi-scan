@@ -325,44 +325,6 @@
                     "status": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -383,20 +345,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -407,41 +356,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -451,21 +368,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -495,10 +400,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -515,10 +416,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -533,28 +430,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -562,12 +442,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"
@@ -576,44 +454,6 @@
                     "title": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -634,20 +474,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -658,41 +485,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -702,21 +497,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -746,10 +529,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -766,10 +545,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -784,28 +559,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -813,12 +571,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"
@@ -827,44 +583,6 @@
                     "content": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -885,20 +603,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -909,41 +614,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -953,21 +626,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -997,10 +658,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -1017,10 +674,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -1035,28 +688,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -1064,12 +700,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"
@@ -1078,44 +712,6 @@
                     "excerpt": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -1136,20 +732,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -1160,41 +743,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -1204,21 +755,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -1248,10 +787,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -1268,10 +803,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -1286,28 +817,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -1315,12 +829,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"
@@ -1329,44 +841,6 @@
                     "publishedAt": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -1387,20 +861,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -1411,41 +872,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -1455,21 +884,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -1499,10 +916,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -1519,10 +932,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -1537,28 +946,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -1566,12 +958,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"
@@ -2346,44 +1736,6 @@
                     "role": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -2404,20 +1756,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -2428,41 +1767,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -2472,21 +1779,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -2516,10 +1811,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -2536,10 +1827,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -2554,28 +1841,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -2583,12 +1853,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"
@@ -2597,44 +1865,6 @@
                     "name": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -2655,20 +1885,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -2679,41 +1896,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -2723,21 +1908,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -2767,10 +1940,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -2787,10 +1956,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -2805,28 +1970,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -2834,12 +1982,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"
@@ -2848,44 +1994,6 @@
                     "image": {
                       "type": "object",
                       "properties": {
-                        "_parse": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => ParseReturnType<this[\"_output\"]>)"
-                        },
-                        "unwrap": {
-                          "type": "object",
-                          "description": "Response (() => T)"
-                        },
-                        "_type": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_output": {
-                          "type": "object",
-                          "description": "Response (Output)"
-                        },
-                        "_input": {
-                          "type": "object",
-                          "description": "Response (Input)"
-                        },
-                        "_def": {
-                          "type": "object",
-                          "properties": {
-                            "errorMap": {
-                              "type": "object",
-                              "description": "Response (ZodErrorMap)",
-                              "nullable": true
-                            },
-                            "description": {
-                              "type": "string",
-                              "nullable": true
-                            }
-                          }
-                        },
-                        "description": {
-                          "type": "string",
-                          "nullable": true
-                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -2906,20 +2014,7 @@
                             },
                             "types": {
                               "type": "object",
-                              "properties": {
-                                "input": {
-                                  "type": "object",
-                                  "description": "The input type of the schema."
-                                },
-                                "output": {
-                                  "type": "object",
-                                  "description": "The output type of the schema."
-                                }
-                              },
-                              "required": [
-                                "input",
-                                "output"
-                              ],
+                              "properties": {},
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
@@ -2930,41 +2025,9 @@
                             "validate"
                           ]
                         },
-                        "_getType": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => string)"
-                        },
-                        "_getOrReturnCtx": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput, ctx?: ParseContext | undefined) => ParseContext)"
-                        },
-                        "_processInputParams": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => { status: ParseStatus; ctx: ParseContext; })"
-                        },
-                        "_parseSync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => SyncParseReturnType<Output>)"
-                        },
-                        "_parseAsync": {
-                          "type": "object",
-                          "description": "Response ((input: ParseInput) => AsyncParseReturnType<Output>)"
-                        },
-                        "parse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Output)"
-                        },
-                        "safeParse": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => SafeParseReturnType<Input, Output>)"
-                        },
                         "~validate": {
                           "type": "object",
                           "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "parseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<Output>)"
                         },
                         "safeParseAsync": {
                           "type": "object",
@@ -2974,21 +2037,9 @@
                           "type": "object",
                           "description": "Alias of safeParseAsync"
                         },
-                        "refine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => unknown, message?: string | Partial<util.Omit<ZodCustomIssue, \"code\">> | ((arg: Output) => Partial<util.Omit<ZodCustomIssue, \"code\">>) | undefined): ZodEffects<this, Output, Input>; })"
-                        },
                         "refinement": {
                           "type": "object",
                           "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "_refinement": {
-                          "type": "object",
-                          "description": "Response ((refinement: (arg: Output, ctx: RefinementCtx) => any) => ZodEffects<this, Output, Input>)"
-                        },
-                        "superRefine": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(refinement: (arg: Output, ctx: RefinementCtx) => arg is RefinedOutput): ZodEffects<this, RefinedOutput, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => void): ZodEffects<this, Output, Input>; (refinement: (arg: Output, ctx: RefinementCtx) => Promise<void>): ZodEffects<this, Output, Input>; })"
                         },
                         "optional": {
                           "type": "object",
@@ -3018,10 +2069,6 @@
                           "type": "object",
                           "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
                         },
-                        "transform": {
-                          "type": "object",
-                          "description": "Response (<NewOut>(transform: (arg: Output, ctx: RefinementCtx) => NewOut | Promise<NewOut>) => ZodEffects<this, NewOut, input<this>>)"
-                        },
                         "default": {
                           "type": "object",
                           "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
@@ -3038,10 +2085,6 @@
                           "type": "object",
                           "description": "Response ((description: string) => this)"
                         },
-                        "pipe": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(target: T) => ZodPipeline<this, T>)"
-                        },
                         "readonly": {
                           "type": "object",
                           "description": "Response (() => ZodReadonly<this>)"
@@ -3056,28 +2099,11 @@
                         }
                       },
                       "required": [
-                        "_parse",
-                        "unwrap",
-                        "_type",
-                        "_output",
-                        "_input",
-                        "_def",
                         "~standard",
-                        "_getType",
-                        "_getOrReturnCtx",
-                        "_processInputParams",
-                        "_parseSync",
-                        "_parseAsync",
-                        "parse",
-                        "safeParse",
                         "~validate",
-                        "parseAsync",
                         "safeParseAsync",
                         "spa",
-                        "refine",
                         "refinement",
-                        "_refinement",
-                        "superRefine",
                         "optional",
                         "nullable",
                         "nullish",
@@ -3085,12 +2111,10 @@
                         "promise",
                         "or",
                         "and",
-                        "transform",
                         "default",
                         "brand",
                         "catch",
                         "describe",
-                        "pipe",
                         "readonly",
                         "isOptional",
                         "isNullable"

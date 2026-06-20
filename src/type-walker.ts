@@ -115,6 +115,15 @@ export function typeToSchemaRef(type: Type, knownSchemas: Set<string>): SchemaRe
 
     for (const prop of properties) {
       const propName = prop.getName()
+      // Skip Zod runtime internals and function-typed properties
+      // (e.g., spread of c.req.valid() resolves to ZodObject with _parse, unwrap, refine, etc.)
+      if (propName.startsWith('_') || propName === 'unwrap' || propName === 'refine' ||
+          propName === 'superRefine' || propName === 'transform' || propName === 'pipe' ||
+          propName === 'parse' || propName === 'safeParse' || propName === 'parseAsync' ||
+          propName === 'source' || propName === 'input' || propName === 'output' ||
+          propName === 'description' || propName === 'meta' || propName === 'removeCatch') {
+        continue
+      }
       try {
         let propType: Type | undefined
         let valueDecl: any = prop.getValueDeclaration?.()
