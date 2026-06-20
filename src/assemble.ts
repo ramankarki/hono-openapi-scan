@@ -603,7 +603,7 @@ function normalizeResponseRefs(routes: RouteInfo[], schemas: Record<string, any>
     if (route.handler?.responses) {
       for (const resp of route.handler.responses) {
         if (resp.schema && !resp.schema.$ref && resp.schema.properties) {
-          const matched = findMatchingSchemaRef(resp.schema, schemas)
+          const matched = findMatchingSchemaRef(resp.schema, schemas, route)
           if (matched) {
             resp.schema = { $ref: `#/components/schemas/${matched}` }
           }
@@ -628,14 +628,32 @@ function schemaPropertiesMatch(a: Record<string, any>, b: Record<string, any>): 
  * Check if an inline object schema matches a component schema by property names.
  * Returns the component schema name if matched, null otherwise.
  */
-function findMatchingSchemaRef(inline: Record<string, any>, schemas: Record<string, any>): string | null {
+function findMatchingSchemaRef(inline: Record<string, any>, schemas: Record<string, any>, route?: RouteInfo): string | null {
   if (!inline.properties || typeof inline.properties !== 'object') return null
 
   const inlineKeys = new Set(Object.keys(inline.properties))
   if (inlineKeys.size === 0) return null
 
+  // Build context hints from route path/tags for disambiguation
+  const contextWords = new Set<string>()
+  if (route) {
+    for (const tag of route.tags) {
+      const t = tag.toLowerCase()
+      contextWords.add(t)
+      // Also add singular form (strip trailing 's')
+      if (t.endsWith('s')) contextWords.add(t.slice(0, -1))
+    }
+    const pathSegs = route.path.replace(/[{}]/g, '').split('/').filter(Boolean)
+    for (const seg of pathSegs) {
+      const s = seg.toLowerCase()
+      contextWords.add(s)
+      if (s.endsWith('s')) contextWords.add(s.slice(0, -1))
+    }
+  }
+
   let bestMatch: string | null = null
   let bestScore = 0
+  let bestContextBonus = 0
 
   for (const [name, schema] of Object.entries(schemas)) {
     if (!schema.properties || typeof schema.properties !== 'object') continue
@@ -652,20 +670,34 @@ function findMatchingSchemaRef(inline: Record<string, any>, schemas: Record<stri
     const union = new Set([...inlineKeys, ...schemaKeys]).size
     const score = intersection / union
 
-    // Exact match (all properties match exactly)
+    // Context bonus: schema name shares words with route path/tags
+    let contextBonus = 0
+    for (const word of contextWords) {
+      if (name.toLowerCase().includes(word)) contextBonus += 0.1
+    }
+
+    const effectiveScore = score + contextBonus
+
+    // Exact match with context tiebreak — prefer higher effectiveScore
     if (score === 1.0 && inlineKeys.size === schemaKeys.size) {
-      return name
+      if (effectiveScore > bestScore + bestContextBonus || bestMatch === null) {
+        bestScore = score
+        bestContextBonus = contextBonus
+        bestMatch = name
+      }
+      continue
     }
 
     // Near match (at least 80% overlap, and inline is subset of schema)
-    if (score >= 0.8 && inlineKeys.size <= schemaKeys.size && score > bestScore) {
+    if (effectiveScore >= 0.8 && inlineKeys.size <= schemaKeys.size && effectiveScore > bestScore + bestContextBonus) {
       bestScore = score
+      bestContextBonus = contextBonus
       bestMatch = name
     }
   }
 
-  // Only match if inline has at least 3 properties and score >= 0.8
-  if (bestMatch && inlineKeys.size >= 3 && bestScore >= 0.8) {
+  // Only match if inline has at least 2 properties and score >= 0.8
+  if (bestMatch && inlineKeys.size >= 2 && bestScore >= 0.8) {
     return bestMatch
   }
 

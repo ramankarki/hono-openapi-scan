@@ -1937,7 +1937,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserListResponse"
+                  "$ref": "#/components/schemas/PostListResponse"
                 }
               }
             }
