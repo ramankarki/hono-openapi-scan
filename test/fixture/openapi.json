@@ -325,6 +325,36 @@
                     "status": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -339,121 +369,73 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "title": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -468,121 +450,73 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "content": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -597,121 +531,73 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "excerpt": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -726,121 +612,73 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "publishedAt": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -855,116 +693,38 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "id": {
@@ -1736,6 +1496,36 @@
                     "role": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -1750,121 +1540,73 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "name": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -1879,121 +1621,73 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "image": {
                       "type": "object",
                       "properties": {
+                        "_type": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_output": {
+                          "type": "object",
+                          "description": "Response (Output)"
+                        },
+                        "_input": {
+                          "type": "object",
+                          "description": "Response (Input)"
+                        },
+                        "_def": {
+                          "type": "object",
+                          "properties": {
+                            "errorMap": {
+                              "type": "object",
+                              "description": "Response (ZodErrorMap)",
+                              "nullable": true
+                            },
+                            "description": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
                         "~standard": {
                           "type": "object",
                           "properties": {
@@ -2008,116 +1702,38 @@
                               "type": "string",
                               "description": "The vendor name of the schema library."
                             },
-                            "validate": {
-                              "type": "object",
-                              "description": "Validates unknown input values."
-                            },
                             "types": {
                               "type": "object",
-                              "properties": {},
+                              "properties": {
+                                "input": {
+                                  "type": "object",
+                                  "description": "The input type of the schema."
+                                },
+                                "output": {
+                                  "type": "object",
+                                  "description": "The output type of the schema."
+                                }
+                              },
+                              "required": [
+                                "input",
+                                "output"
+                              ],
                               "nullable": true,
                               "description": "Inferred types associated with the schema."
                             }
                           },
                           "required": [
                             "version",
-                            "vendor",
-                            "validate"
+                            "vendor"
                           ]
-                        },
-                        "~validate": {
-                          "type": "object",
-                          "description": "Response ((data: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>)"
-                        },
-                        "safeParseAsync": {
-                          "type": "object",
-                          "description": "Response ((data: unknown, params?: util.InexactPartial<ParseParams> | undefined) => Promise<SafeParseReturnType<Input, Output>>)"
-                        },
-                        "spa": {
-                          "type": "object",
-                          "description": "Alias of safeParseAsync"
-                        },
-                        "refinement": {
-                          "type": "object",
-                          "description": "Response ({ <RefinedOutput extends Output>(check: (arg: Output) => arg is RefinedOutput, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, RefinedOutput, Input>; (check: (arg: Output) => boolean, refinementData: IssueData | ((arg: Output, ctx: RefinementCtx) => IssueData)): ZodEffects<this, Output, Input>; })"
-                        },
-                        "optional": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<this>)"
-                        },
-                        "nullable": {
-                          "type": "object",
-                          "description": "Response (() => ZodNullable<this>)"
-                        },
-                        "nullish": {
-                          "type": "object",
-                          "description": "Response (() => ZodOptional<ZodNullable<this>>)"
-                        },
-                        "array": {
-                          "type": "object",
-                          "description": "Response (() => ZodArray<this, \"many\">)"
-                        },
-                        "promise": {
-                          "type": "object",
-                          "description": "Response (() => ZodPromise<this>)"
-                        },
-                        "or": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(option: T) => ZodUnion<[this, T]>)"
-                        },
-                        "and": {
-                          "type": "object",
-                          "description": "Response (<T extends ZodTypeAny>(incoming: T) => ZodIntersection<this, T>)"
-                        },
-                        "default": {
-                          "type": "object",
-                          "description": "Response ({ (def: util.noUndefined<Input>): ZodDefault<this>; (def: () => util.noUndefined<Input>): ZodDefault<this>; })"
-                        },
-                        "brand": {
-                          "type": "object",
-                          "description": "Response (<B extends string | number | symbol>(brand?: B | undefined) => ZodBranded<this, B>)"
-                        },
-                        "catch": {
-                          "type": "object",
-                          "description": "Response ({ (def: Output): ZodCatch<this>; (def: (ctx: { error: ZodError<any>; input: Input; }) => Output): ZodCatch<this>; })"
-                        },
-                        "describe": {
-                          "type": "object",
-                          "description": "Response ((description: string) => this)"
-                        },
-                        "readonly": {
-                          "type": "object",
-                          "description": "Response (() => ZodReadonly<this>)"
-                        },
-                        "isOptional": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
-                        },
-                        "isNullable": {
-                          "type": "object",
-                          "description": "Response (() => boolean)"
                         }
                       },
                       "required": [
-                        "~standard",
-                        "~validate",
-                        "safeParseAsync",
-                        "spa",
-                        "refinement",
-                        "optional",
-                        "nullable",
-                        "nullish",
-                        "array",
-                        "promise",
-                        "or",
-                        "and",
-                        "default",
-                        "brand",
-                        "catch",
-                        "describe",
-                        "readonly",
-                        "isOptional",
-                        "isNullable"
+                        "_type",
+                        "_output",
+                        "_input",
+                        "_def",
+                        "~standard"
                       ]
                     },
                     "id": {

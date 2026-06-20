@@ -115,15 +115,6 @@ export function typeToSchemaRef(type: Type, knownSchemas: Set<string>): SchemaRe
 
     for (const prop of properties) {
       const propName = prop.getName()
-      // Skip Zod runtime internals and function-typed properties
-      // (e.g., spread of c.req.valid() resolves to ZodObject with _parse, unwrap, refine, etc.)
-      if (propName.startsWith('_') || propName === 'unwrap' || propName === 'refine' ||
-          propName === 'superRefine' || propName === 'transform' || propName === 'pipe' ||
-          propName === 'parse' || propName === 'safeParse' || propName === 'parseAsync' ||
-          propName === 'source' || propName === 'input' || propName === 'output' ||
-          propName === 'description' || propName === 'meta' || propName === 'removeCatch') {
-        continue
-      }
       try {
         let propType: Type | undefined
         let valueDecl: any = prop.getValueDeclaration?.()
@@ -141,6 +132,14 @@ export function typeToSchemaRef(type: Type, knownSchemas: Set<string>): SchemaRe
         }
 
         if (propType) {
+          // Skip function-typed properties (methods, Zod runtime internals).
+          // Spread of c.req.valid() resolves to full Zod object with callable methods.
+          // Only keep data properties (no call signatures).
+          try {
+            const callSigs = (propType as any).getCallSignatures?.() || []
+            if (callSigs.length > 0) continue
+          } catch { /* not callable */ }
+
           const propSchema = typeToSchemaRef(propType, knownSchemas)
 
           // Check description from JSDoc on the property
