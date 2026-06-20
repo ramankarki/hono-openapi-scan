@@ -135,8 +135,10 @@ function convertZodObject(callNode: AnyNode, files: SourceFile[], knownSchemas: 
     const properties = objLiteral.getProperties?.() || []
 
     for (const prop of properties) {
-      const propName = prop.getName?.()
+      let propName = prop.getName?.()
       if (!propName) continue
+      // Strip quotes from property names with hyphens: 'x-api-version' → x-api-version
+      propName = propName.replace(/^['"]|['"]$/g, '')
 
       const initializer = prop.getInitializer?.()
       if (!initializer) continue

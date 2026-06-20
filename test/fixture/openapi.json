@@ -16,7 +16,7 @@
         "operationId": "getSystemInfo",
         "parameters": [
           {
-            "name": "'x-api-version'",
+            "name": "x-api-version",
             "in": "header",
             "required": false,
             "schema": {
@@ -27,7 +27,7 @@
             "description": "API version to use"
           },
           {
-            "name": "'x-client-id'",
+            "name": "x-client-id",
             "in": "header",
             "required": true,
             "schema": {
@@ -4554,19 +4554,19 @@
       "ApiVersionHeaderSchema": {
         "type": "object",
         "properties": {
-          "'x-api-version'": {
+          "x-api-version": {
             "type": "string",
             "description": "API version to use",
             "example": "string"
           },
-          "'x-client-id'": {
+          "x-client-id": {
             "type": "string",
             "description": "Client application identifier",
             "example": "string"
           }
         },
         "required": [
-          "'x-client-id'"
+          "x-client-id"
         ]
       },
       "FileUploadSchema": {
