@@ -1,6 +1,5 @@
 # hono-openapi-scan
 
-[![CI](https://github.com/ramankarki/hono-openapi-scan/actions/workflows/ci.yml/badge.svg)](https://github.com/ramankarki/hono-openapi-scan/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/hono-openapi-scan)](https://www.npmjs.com/package/hono-openapi-scan)
 [![license](https://img.shields.io/npm/l/hono-openapi-scan)](https://github.com/ramankarki/hono-openapi-scan/blob/main/LICENSE)
 
