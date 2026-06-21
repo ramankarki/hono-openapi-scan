@@ -23,8 +23,7 @@ The scanner **reads your code without running it**. It understands your routes, 
 When you run `hono-openapi-scan src/index.ts`, here's the full pipeline showing which file and function handles each task:
 
 ```
-📦 cli.ts
- └─ main()
+📦 cli.ts (Commander .action callback)
      ├─ loadConfig()                        ── config.ts
      └─ scan(config)                        ── scanner.ts
           │
