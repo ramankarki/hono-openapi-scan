@@ -61,7 +61,7 @@ When you run `hono-openapi-scan src/index.ts`, here's the full pipeline showing 
           │       └─ .route('/prefix', subApp)
           │           └─ resolveSubApp()         follow imports → recurse
           │
-          └─ assembleSpec(routes, config)   ── assemble.ts
+          ├─ assembleSpec(routes, config)   ── assemble.ts
                ├─ Phase 1: Collect Zod schemas (from middleware + @returns)
                ├─ Phase 2: Build schemas
                │   ├─ resolveZodSchema()     ── zod-schema.ts
@@ -78,7 +78,7 @@ When you run `hono-openapi-scan src/index.ts`, here's the full pipeline showing 
                │   └─ buildResponses()          handler + auto errors
                └─ return spec
 
-     └─ writeFileSync(output, json)         ── scanner.ts (fs built-in)
+          └─ writeFileSync(output, json)    ── scanner.ts (fs built-in)
 ```
 
 Let's go through each phase in detail.
