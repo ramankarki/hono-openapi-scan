@@ -153,7 +153,8 @@ Every `new Hono()` expression is recorded. If multiple apps exist (common with s
 ### Finding routes
 
 ```ts
-// Look for: .get(), .post(), .put(), .patch(), .delete() calls on Hono instances
+// Look for: .get(), .post(), .put(), .patch(), .delete(), .on() calls on Hono instances
+// .on() supports method arrays: app.on(['POST', 'GET'], '/path', handler)
 // Found:
 //   GET    /users          (users.ts)
 //   POST   /users          (users.ts)
@@ -217,18 +218,23 @@ parameters:
     schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
 ```
 
-### Response schemas (from c.json)
+### Response schemas (from c.json / c.body / c.text / c.redirect)
 
 ```ts
 // Source
 return c.json({ data: users, cursor: nextCursor }, 200)
 return c.json(user, 201)
 if (!user) return c.json({ code: 'NOT_FOUND', message: '...' }, 404)
+return c.body(binaryData, 200)      // → application/octet-stream
+return c.redirect('/login', 302)    // → 302 with no body schema
 ```
 
-The scanner finds every `c.json()` call in the handler body and records:
-- **Status code** — 200, 201, 404, etc.
-- **Data shape** — the type of the first argument
+The scanner AST-walks the handler body and finds every response call:
+- **`c.json(data, status)`** — resolves the TypeScript type of `data` via ts-morph → full JSON Schema
+- **`c.body()`** — marks as `application/octet-stream`
+- **`c.text()` / `c.html()`** — marks as `text/plain` / `text/html`
+- **`c.redirect()`** — marks as 302/301 with no body schema
+- **Status code** — extracted from second argument (defaults to 200)
 - **Multiple paths** — if/else branches produce different status codes
 
 ### JSDoc metadata
@@ -367,16 +373,21 @@ components:
   schemas:                  # From Zod + Drizzle (demand-driven)
     UserSchema: { ... }
     CreateUserInput: { ... }
-    Error:                  # Always included
+    Error:                  # Always included (RFC 9457 default)
       type: object
+      required: [code, message]
       properties:
-        success: { type: boolean, const: false }
-        error:
-          type: object
-          properties:
-            type: { type: string }
-            code: { type: string }
-            message: { type: string }
+        code: { type: string, description: Machine-readable error code }
+        message: { type: string, description: Human-readable error message }
+        status: { type: integer, description: HTTP status code }
+        details:
+          type: array  # Field-level validation errors
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+              code: { type: string }
 
 paths:                      # From route detection
   /users:
@@ -420,10 +431,10 @@ The assembled spec is serialized to JSON and written to disk:
 ```bash
 $ hono-openapi-scan src/index.ts
 Scanning entry: src/index.ts
-Resolved 182 source files
+Resolved 184 source files
 Found 5 Hono app(s)
-  app: 17 route(s)
-Total unique routes: 15
+  app: 22 route(s)
+Total unique routes: 22
 Wrote OpenAPI spec to: openapi.json
 ```
 
