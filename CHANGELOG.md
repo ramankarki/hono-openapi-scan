@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.1](https://github.com/ramankarki/hono-openapi-scan/compare/hono-openapi-scan-v1.2.0...hono-openapi-scan-v1.2.1) (2026-06-21)
+
+
+### Documentation
+
+* fix call-tree — attach writeFileSync under scan(), assembleSpec not last child ([5e75414](https://github.com/ramankarki/hono-openapi-scan/commit/5e75414f6ac152079560e81d3d3cabe37b2d205c))
+* fix call-tree — remove fake main(), use Commander .action() entry ([64ee303](https://github.com/ramankarki/hono-openapi-scan/commit/64ee303f6fc7bc34e159af1fa8bc24090913bc1f))
+* fix duplicate §11, add cookie/header/body to summary table. README RFC 9457 default ([f6714fe](https://github.com/ramankarki/hono-openapi-scan/commit/f6714fe127d3de300ea668ec1b6eddda88f57290))
+* sync HOW_IT_WORKS.md — fixture numbers, RFC 9457 error schema, c.body/redirect, app.on() ([3d48800](https://github.com/ramankarki/hono-openapi-scan/commit/3d48800eb512fcbe9f154fe7bf2aceb13d31a4be))
+
 ## [1.2.0](https://github.com/ramankarki/hono-openapi-scan/compare/hono-openapi-scan-v1.1.0...hono-openapi-scan-v1.2.0) (2026-06-20)
 
 
