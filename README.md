@@ -293,20 +293,18 @@ Every route automatically gets context-aware error responses:
 | `429` | Always | Too Many Requests |
 | `500` | Always | Internal Server Error |
 
-The error schema follows a Stripe-style format by default:
+The default error schema follows RFC 9457 format:
 
 ```json
 {
-  "success": false,
-  "error": {
-    "type": "validation_error",
-    "code": "validation_invalid_input",
-    "message": "Email is required"
-  }
+  "code": "RESOURCE_NOT_FOUND",
+  "message": "No resource exists with the given ID",
+  "status": 404,
+  "details": [{ "field": "body.email", "message": "Invalid email format", "code": "INVALID_FORMAT" }]
 }
 ```
 
-To customize the error shape, reference your own Zod schema:
+To customize, pass your own Zod schema via `errorSchema`:
 
 ```ts
 // hono-openapi-scan.config.ts
@@ -417,7 +415,7 @@ All fields are optional. Run `hono-openapi-scan init` to generate a config file.
 | `security` | `Array<Record<string,string[]>>` | `[]` | Global security requirement |
 | `securitySchemes` | `Record<string, SecurityScheme>` | none | Auth scheme definitions |
 | `tags` | `Array<{name, description?}>` | auto from paths | Tag groups for endpoints |
-| `errorSchema` | `ZodObject` | built-in Stripe-style | Pass your Zod schema object directly |
+| `errorSchema` | `ZodObject` | built-in RFC 9457 | Pass your Zod schema object directly |
 | `defaultErrorResponses` | `boolean \| number[]` | `true` | Auto error responses |
 | `excludeAuth` | `string[]` | `[]` | Paths that skip auth (glob patterns) |
 | `entry` | `string` | `"src/index.ts"` | Entry file to scan |

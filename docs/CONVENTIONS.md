@@ -449,24 +449,27 @@ These patterns produce fallback schemas because ts-morph can't resolve them at c
 
 ---
 
-## 11. Convention Summary (For Scanner Design)
+## 12. Convention Summary (For Scanner Design)
 
 | What | Convention | How we detect |
 |---|---|---|
 | App entry | `export default app` or `export const app` | ts-morph: find `new Hono()` assigned to export |
-| Route definition | `.get(path, ...middleware, handler)` | Walk call expressions, resolve path + method |
+| Route definition | `.get(path, ...middleware, handler)` + `.on(method, ...)` | Walk call expressions, resolve path + method |
 | Path params | `zValidator('param', z.object({...}))` | Find in middleware array, extract schema |
-| Query params | `zValidator('query', z.object({...}))` | Find in middleware array, extract schema |
-| Request body | `zValidator('json', z.object({...}))` | Find in middleware array, extract schema |
-| Form data | `zValidator('form', z.object({...}))` | Find in middleware array, extract schema |
-| Headers | `zValidator('header', z.object({...}))` | Find in middleware array, extract schema |
-| Response | `c.json(data, status)` | Find return statements in handler body |
-| Response type | AST walk `c.json()` + ts-morph `getType()` on data arg | Full JSON Schema with properties, types, nullability |
-| Auth | `app.use('*', authMiddleware)` | Trace middleware to auth check |
+| Query params | `zValidator('query', z.object({...}))` | Find in middleware array, expand to individual params |
+| Cookie params | `zValidator('cookie', z.object({...}))` | Find in middleware array, expand to individual params |
+| Header params | `zValidator('header', z.object({...}))` | Find in middleware array, expand to individual params |
+| Request body | `zValidator('json', z.object({...}))` | Find in middleware array, extract schema with writeOnly |
+| Form data | `zValidator('form', z.object({...}))` | Find in middleware array → `multipart/form-data` |
+| Response | `c.json()` / `c.text()` / `c.html()` / `c.body()` / `c.redirect()` | AST walk handler body, find response calls |
+| Response type | AST walk `c.json()` data arg → ts-morph `getType()` | Full JSON Schema with properties, types, nullability |
+| Spread from `c.req.valid()` | `{ ...body }` where `body = c.req.valid('json')` | Resolve via zValidator middleware schema, not type-walking |
+| Auth | `app.use('*', authMiddleware)` | Pattern-match middleware body for `auth.api.getSession` |
+| Explicit security | `@security {bearerAuth, apiKey}` JSDoc | Parse JSDoc, validate against config.securitySchemes |
 | Public route | `@public` JSDoc | Parse JSDoc on handler |
 | Tags | `@tags` JSDoc or auto from path | Parse JSDoc or path segment |
 | Summary | `@summary` JSDoc or auto | Parse JSDoc or method+path |
-| Schema registry | Referenced Zod schemas only | Collect Zod schemas referenced by endpoints (zValidator, return type, @returns) |
-| Drizzle types | Referenced `pgTable(...)` calls only | Find table definitions referenced by endpoints, map to JSON Schema |
-| Sub-routers | `app.route('/prefix', subApp)` | Trace subApp definition, prefix paths |
+| Schema registry | Referenced Zod schemas only (demand-driven) | Collect Zod schemas referenced by endpoints (zValidator, c.json() type, @returns) |
+| Drizzle tables | Referenced `pgTable()` calls only (demand-driven) | Text-match column builders, shape-match to response types |
+| Sub-routers | `app.route('/prefix', subApp)` | Trace subApp definition, prefix paths, recurse |
 | Better Auth | `app.on(['POST','GET'], '/api/auth/*', cb)` | Auto-exclude or tag as "Auth" |
