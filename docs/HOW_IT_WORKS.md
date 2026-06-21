@@ -62,22 +62,22 @@ When you run `hono-openapi-scan src/index.ts`, here's the full pipeline showing 
           │           └─ resolveSubApp()         follow imports → recurse
           │
           ├─ assembleSpec(routes, config)   ── assemble.ts
-               ├─ Phase 1: Collect Zod schemas (from middleware + @returns)
-               ├─ Phase 2: Build schemas
-               │   ├─ resolveZodSchema()     ── zod-schema.ts
-               │   │   └─ convertZodAST()      walk z.object/enum/array/string/…
-               │   ├─ findDrizzleTables()    ── drizzle.ts
-               │   │   └─ extractColumnInfo()   text match on uuid()/text()/…
-               │   ├─ schemaPropertiesMatch()   shape-match for demand-driven
-               │   ├─ drizzleTableToSchema() ── drizzle.ts
-               │   ├─ inferExample()            auto-generate examples
-               │   └─ normalizeResponseRefs()   inline schema → $ref
-               ├─ Phase 3: Build routes
-               │   ├─ buildParameters()         path/query/header/cookie
-               │   ├─ buildRequestBody()        json/form with writeOnly
-               │   └─ buildResponses()          handler + auto errors
-               └─ return spec
-
+          │    ├─ Phase 1: Collect Zod schemas (from middleware + @returns)
+          │    ├─ Phase 2: Build schemas
+          │    │   ├─ resolveZodSchema()     ── zod-schema.ts
+          │    │   │   └─ convertZodAST()      walk z.object/enum/array/string/…
+          │    │   ├─ findDrizzleTables()    ── drizzle.ts
+          │    │   │   └─ extractColumnInfo()   text match on uuid()/text()/…
+          │    │   ├─ schemaPropertiesMatch()   shape-match for demand-driven
+          │    │   ├─ drizzleTableToSchema() ── drizzle.ts
+          │    │   ├─ inferExample()            auto-generate examples
+          │    │   └─ normalizeResponseRefs()   inline schema → $ref
+          │    ├─ Phase 3: Build routes
+          │    │   ├─ buildParameters()         path/query/header/cookie
+          │    │   ├─ buildRequestBody()        json/form with writeOnly
+          │    │   └─ buildResponses()          handler + auto errors
+          │    └─ return spec
+          │
           └─ writeFileSync(output, json)    ── scanner.ts (fs built-in)
 ```
 
